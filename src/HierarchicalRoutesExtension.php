@@ -94,6 +94,11 @@ class HierarchicalRoutesExtension extends SimpleExtension
     {
         return [
             'my_twig_function' => 'myTwigFunction',
+            // testing
+            'getParent'        => 'getParent',
+            'getParents'       => 'getParents',
+            'getChildren'      => 'getChildren',
+            'getSiblings'      => 'getSiblings',
         ];
     }
 
@@ -174,7 +179,8 @@ class HierarchicalRoutesExtension extends SimpleExtension
         // dump($this->parents);
         // dump($this->children);
         // dump($this->slugs);
-        // dump($this->routes);
+        // dump($this->recordRoutes);
+        // dump($this->listingRoutes);
         // dump($this->contenttypeRules);
 
         $collection->match('/example/url', [$this, 'routeExampleUrl']);
@@ -188,6 +194,7 @@ class HierarchicalRoutesExtension extends SimpleExtension
             ->bind('hierarchicalroutes.record.exact')
         ;
 
+        // This might mess with canonical links.
         $collection
             ->match("/{slug}", [$this, 'listingExactMatch'])
             ->assert('slug', $this->anyListingRouteConstraint())
@@ -197,6 +204,13 @@ class HierarchicalRoutesExtension extends SimpleExtension
         // Note: Would you want this? There's a potential choice for:
         //   - /foo/bar/{taxonomytype}/{slug}
         //   - /foo/bar/{slug}
+        //
+        // However, a route like:
+        //
+        //   /foo/bar/pages/{taxonomytype}/{slug}
+        //
+        // would not work, unless that taxonomytype would only be bound to that
+        // one contenttype (pages).
         //
         // $collection
         //     ->match("/{slug}", [$this, 'taxonomyExactMatch'])
@@ -223,7 +237,7 @@ class HierarchicalRoutesExtension extends SimpleExtension
      */
     public function anyRecordRouteConstraint()
     {
-        return $this->createConstraints($this->routes);
+        return $this->createConstraints($this->recordRoutes);
     }
 
     /**
@@ -239,7 +253,7 @@ class HierarchicalRoutesExtension extends SimpleExtension
      */
     public function anyPotentialParentConstraint()
     {
-        return $this->createConstraints($this->contenttypeRules);
+        return $this->createConstraints(array_keys($this->contenttypeRules));
     }
 
     /**
@@ -250,6 +264,7 @@ class HierarchicalRoutesExtension extends SimpleExtension
         if (empty($array)) {
             return '$.';
         }
+
         return implode('|', $array);
     }
 
@@ -263,7 +278,7 @@ class HierarchicalRoutesExtension extends SimpleExtension
         $app = $this->getContainer();
 
         $content = $app['storage']->getContent(
-            array_search($slug, $this->routes),
+            array_search($slug, $this->recordRoutes),
             ['hydrate' => false]
         );
 
@@ -306,7 +321,7 @@ class HierarchicalRoutesExtension extends SimpleExtension
 
         // potential 1: contenttype rule match
 
-        $parentsKey = array_search($parents, $this->routes);
+        $parentsKey = array_search($parents, $this->recordRoutes);
         if (isset($this->contenttypeRules[$parentsKey])) {
 
             foreach ($this->contenttypeRules[$parentsKey] as $contenttypeslug) {
@@ -326,15 +341,18 @@ class HierarchicalRoutesExtension extends SimpleExtension
 
     // todo: Service
 
-    // Simple lookup tables
+    /** @var string[] $parents */
     private $parents  = [];
+
+    /** @var string[] $children */
     private $children = [];
-    private $slugs    = []; // identifier => slug
+
+    /** @var string[] $slugs */
+    private $slugs    = [];
 
     // Carefully divided collections for different routes
-    private $routes           = []; // identifier => slug + parents' slug
+    private $recordRoutes     = []; // identifier => slug + parents' slug
     private $listingRoutes    = []; // same as $routes, but for listings
-    private $taxonomyRoutes   = []; // same as $routes, but for taxonomies
     private $contenttypeRules = []; // parent => contenttypeslug
 
 
@@ -378,7 +396,7 @@ class HierarchicalRoutesExtension extends SimpleExtension
 
             $this->parents["$contenttype/$id"] = $parent;
             $this->slugs["$contenttype/$id"]   = $slug;
-            $this->routes["$contenttype/$id"]  = $parent ? $this->routes[$parent] . '/' . $slug : $slug;
+            $this->recordRoutes["$contenttype/$id"]  = $parent ? $this->recordRoutes[$parent] . '/' . $slug : $slug;
 
             if ($parent) {
                 $this->children[$parent][] = "$contenttype/$id"; // but also add links and other items ???
@@ -396,8 +414,8 @@ class HierarchicalRoutesExtension extends SimpleExtension
 
             $this->parents[$path] = $parent;
             $this->slugs[$path]   = $path;
-            // $this->routes[$path]  = $parent ? $this->routes[$parent] . '/' . $path : $path;
-            $this->listingRoutes[$path]  = $parent ? $this->routes[$parent] . '/' . $path : $path;
+            // $this->recordRoutes[$path]  = $parent ? $this->recordRoutes[$parent] . '/' . $path : $path;
+            $this->listingRoutes[$path]  = $parent ? $this->recordRoutes[$parent] . '/' . $path : $path;
 
             if (isset($item['submenu'])) {
                 foreach ($item['submenu'] as $subitem) {
@@ -465,9 +483,9 @@ class HierarchicalRoutesExtension extends SimpleExtension
                         $this->slugs["$contenttypeslug/$id"]   = $slug;
 
                         if (is_array($content)) {
-                            $this->listingRoutes["$contenttypeslug/$id"]  = $this->routes[$parent] . '/' . $slug;
+                            $this->listingRoutes["$contenttypeslug/$id"]  = $this->recordRoutes[$parent] . '/' . $slug;
                         } else {
-                            $this->routes["$contenttypeslug/$id"]  = $this->routes[$parent] . '/' . $slug;
+                            $this->recordRoutes["$contenttypeslug/$id"]  = $this->recordRoutes[$parent] . '/' . $slug;
                         }
                     }
                 }
@@ -477,6 +495,78 @@ class HierarchicalRoutesExtension extends SimpleExtension
                 // log an error invalid rule type found
         }
     }
+
+    // todo: Twig
+
+    // todo: These Twig functions do NOT use the dynamic 'contenttype' items yet
+
+    /**
+     *
+     */
+    public function getParent($record)
+    {
+        $contenttypeslug = $record->contenttype['slug'];
+        $id = $record->id;
+        return $this->parents["$contenttypeslug/$id"];
+    }
+
+    /**
+     * [ parent, grandparent, great-grandparent, ... ]
+     * For breadcrumbs, use `getParents(record)|reverse`
+     */
+    public function getParents($record)
+    {
+        $parents = [];
+        $contenttypeslug = $record->contenttype['slug'];
+        $id = $record->id;
+        $parent = "$contenttypeslug/$id";
+
+        do {
+            $parent = $this->parents[$parent];
+            if ($parent !== null) {
+                $parents[] = $parent;
+            }
+            $slug = $parent;
+        } while ($slug !== null);
+
+        return $parents;
+    }
+
+    /**
+     *
+     */
+    public function getChildren($record)
+    {
+        $contenttypeslug = $record->contenttype['slug'];
+        $id = $record->id;
+
+        if (isset($this->children["$contenttypeslug/$id"])) {
+            return $this->children["$contenttypeslug/$id"];
+        }
+
+        return [];
+
+        // PHP7:
+        // return $this->children["$contenttypeslug/$id"] ?? [];
+    }
+
+    /**
+     * Returns siblings but not myself ??
+     */
+    public function getSiblings($record)
+    {
+        $contenttypeslug = $record->contenttype['slug'];
+        $id = $record->id;
+
+        $parent = $this->getParent($record);
+        $siblings = array_filter($this->parents, function($k, $v){
+            return $v === $parent && $k !== "$contenttypeslug/$id";
+        }, ARRAY_FILTER_USE_BOTH);
+        // $siblings = $this->children[$parent]; // then remove?
+
+        return $siblings;
+    }
+
 
     // -------------------------------------------------------------------------
 
