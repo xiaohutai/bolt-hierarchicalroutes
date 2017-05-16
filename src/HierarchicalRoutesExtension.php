@@ -1,5 +1,16 @@
 <?php
 
+// -----------------------------------------------------------------------------
+//
+// TODO: USE THE NEW `getContent` FUNCTION INSTEAD:
+//
+//     $app['storage']->getContent => `\Bolt\Legacy\Content` --> to be deprecated, it seems
+//     $app['query']->getContent   => `\Bolt\Storage\Entity\Content`
+//
+// The `setcontent` function (in Twig) currently returns `\Bolt\Legacy\Content`
+//
+// -----------------------------------------------------------------------------
+
 namespace Bolt\Extension\TwoKings\HierarchicalRoutes;
 
 use Bolt\Asset\File\JavaScript;
@@ -155,63 +166,181 @@ class HierarchicalRoutesExtension extends SimpleExtension
      */
     protected function registerFrontendRoutes(ControllerCollection $collection)
     {
+        // cache-able ??
+        $this->importMenu();
+        $rules = $this->getConfig()['rules'];
+        $this->importRules($rules);
+
+        // dump($this->parents);
+        // dump($this->children);
+        // dump($this->slugs);
+        // dump($this->routes);
+        // dump($this->contenttypeRules);
+
         $collection->match('/example/url', [$this, 'routeExampleUrl']);
 
+        // This is an exact match that is takes precendence over all other
+        // front-end routes.
+
         $collection
-            ->match("/{parents}/{slug}", [$this, 'record'])
-            ->assert('parents', [$this, 'inHierarchy']) // basically, if the {parents} combination exists in some look-up table
-            ->assert('slug', '[a-zA-Z0-9_\-]+')
-            ->bind('hierarchicalroutes.record')
+            ->match("/{slug}", [$this, 'recordExactMatch'])
+            ->assert('slug', $this->anyRecordRouteConstraint())
+            ->bind('hierarchicalroutes.record.exact')
         ;
 
-        // is this wanted for (top-level) defined structured items? probably
-        // how about undefined items? because "event/foo" and "event/bar" still makes sense, right??
         $collection
-            ->match("/{slug}", [$this, 'recordParentless'])
-            ->assert('slug', '[a-zA-Z0-9_\-]+[^(sitemap)^(search)]')
-            ->bind('hierarchicalroutes.record.parentless')
+            ->match("/{slug}", [$this, 'listingExactMatch'])
+            ->assert('slug', $this->anyListingRouteConstraint())
+            ->bind('hierarchicalroutes.listing.exact')
         ;
+
+        // Note: Would you want this? There's a potential choice for:
+        //   - /foo/bar/{taxonomytype}/{slug}
+        //   - /foo/bar/{slug}
+        //
+        // $collection
+        //     ->match("/{slug}", [$this, 'taxonomyExactMatch'])
+        //     ->assert('slug', $this->anyTaxonomyRouteConstraint())
+        //     ->bind('hierarchicalroutes.listing.exact')
+        // ;
+
+        // If we allow dynamic content on any node, even leaf nodes.
+        $collection
+            ->match("/{parents}/{slug}", [$this, 'recordPotentialMatch'])
+            ->assert('parents', $this->anyPotentialParentConstraint())
+            ->assert('slug', '[a-zA-Z0-9_\-]+') // this may result in a 404
+            ->bind('hierarchicalroutes.record.fuzzy')
+        ;
+
     }
 
-// distinction between parents + slug and slug
+    // -------------------------------------------------------------------------
 
-    public function inHierarchy()
+    // todo: Controller\Requirement
+
+    /**
+     * @return string
+     */
+    public function anyRecordRouteConstraint()
     {
-        // oh shit, i dont have the current record lol
-        return implode('|', $this->slugs);
+        return $this->createConstraints($this->routes);
     }
 
-    public function record($parents, $slug)
+    /**
+     * @return string
+     */
+    public function anyListingRouteConstraint()
     {
-        $this->importMenu();
-
-        dump($parents);
-        dump($slug);
-
-        dump($this->parents);
-        dump($this->children);
-        dump($this->slugs);
-        dump($this->routes);
-
-        $response = new Response('Hello, Bolt!', Response::HTTP_OK);
-        return $response;
+        return $this->createConstraints($this->listingRoutes);
     }
 
-    public function recordParentless($slug)
+    /**
+     * @return string
+     */
+    public function anyPotentialParentConstraint()
     {
-        $this->importMenu();
-        dump($slug);
-
-        $response = new Response('Hello, Bolt!', Response::HTTP_OK);
-        return $response;
+        return $this->createConstraints($this->contenttypeRules);
     }
 
+    /**
+     * @return string
+     */
+    private function createConstraints($array)
+    {
+        if (empty($array)) {
+            return '$.';
+        }
+        return implode('|', $array);
+    }
+
+    // todo: Controller
+
+    /**
+     *
+     */
+    public function recordExactMatch($slug)
+    {
+        $app = $this->getContainer();
+
+        $content = $app['storage']->getContent(
+            array_search($slug, $this->routes),
+            ['hydrate' => false]
+        );
+
+        return $app['controller.frontend']->record(
+            $app['request'],
+            $content->contenttype['slug'],
+            $content->values['slug']
+        );
+    }
+
+    /**
+     *
+     */
+    public function listingExactMatch($slug)
+    {
+        $app = $this->getContainer();
+
+        return $app['controller.frontend']->listing(
+            $app['request'],
+            array_search($slug, $this->listingRoutes)
+        );
+    }
+
+    /**
+     *
+     */
+    // public function taxonomyExactMatch($slug)
+    // {
+    //     $app = $this->getContainer();
+    //     $taxonomytype = '';
+    //     return $app['controller.frontend']->taxonomy($app['request'], $taxonomytype, $slug);
+    // }
+
+    /**
+     *
+     */
+    public function recordPotentialMatch($parents, $slug)
+    {
+        $app = $this->getContainer();
+
+        // potential 1: contenttype rule match
+
+        $parentsKey = array_search($parents, $this->routes);
+        if (isset($this->contenttypeRules[$parentsKey])) {
+
+            foreach ($this->contenttypeRules[$parentsKey] as $contenttypeslug) {
+                $content = $app['storage']->getContent("$contenttypeslug/$slug", ['hydrate' => false]);
+                if ($content) {
+                    return $app['controller.frontend']->record(
+                        $app['request'],
+                        $content->contenttype['slug'],
+                        $content->values['slug']
+                    );
+                }
+            }
+        }
+
+        $this->abort(Response::HTTP_NOT_FOUND, "Page $parents/$slug not found.");
+    }
+
+    // todo: Service
+
+    // Simple lookup tables
     private $parents  = [];
     private $children = [];
-    private $slugs    = [];
-    private $routes   = [];
+    private $slugs    = []; // identifier => slug
+
+    // Carefully divided collections for different routes
+    private $routes           = []; // identifier => slug + parents' slug
+    private $listingRoutes    = []; // same as $routes, but for listings
+    private $taxonomyRoutes   = []; // same as $routes, but for taxonomies
+    private $contenttypeRules = []; // parent => contenttypeslug
 
 
+    /**
+     *
+     */
     private function importMenu($identifier = 'main')
     {
         $app = $this->getContainer();
@@ -223,6 +352,9 @@ class HierarchicalRoutesExtension extends SimpleExtension
         }
     }
 
+    /**
+     *
+     */
     private function importMenuItem($item, $parent = null)
     {
         // so... items can be path -> easy to find a record
@@ -238,19 +370,18 @@ class HierarchicalRoutesExtension extends SimpleExtension
         }
 
         // Only items with records can be in a hierarchy, otherwise it doesn't make much sense
+
         if ($content && !is_array($content)) {
-            // dump($content);
-            // $content->link();
             $id          = $content->id;
             $slug        = $content->values['slug'];
             $contenttype = $content->contenttype['slug']; // $content->contenttype['singular_slug'];
 
             $this->parents["$contenttype/$id"] = $parent;
             $this->slugs["$contenttype/$id"]   = $slug;
+            $this->routes["$contenttype/$id"]  = $parent ? $this->routes[$parent] . '/' . $slug : $slug;
 
             if ($parent) {
-                $this->children[$parent][] = "$contenttype/$id"; // but also add links and other items ...
-                $this->routes["$contenttype/$id"] = $this->slugs[$parent] . '/' . $slug;
+                $this->children[$parent][] = "$contenttype/$id"; // but also add links and other items ???
             }
 
             if (isset($item['submenu'])) {
@@ -259,7 +390,95 @@ class HierarchicalRoutesExtension extends SimpleExtension
                 }
             }
         }
+        elseif (is_array($content)) {
+            $path = $item['path'];
+            $path = trim($path, '/');
+
+            $this->parents[$path] = $parent;
+            $this->slugs[$path]   = $path;
+            // $this->routes[$path]  = $parent ? $this->routes[$parent] . '/' . $path : $path;
+            $this->listingRoutes[$path]  = $parent ? $this->routes[$parent] . '/' . $path : $path;
+
+            if (isset($item['submenu'])) {
+                foreach ($item['submenu'] as $subitem) {
+                    $this->importMenuItem($subitem, $path);
+                }
+            }
+        }
+        else {
+            // log errors if not found or if skipped (reason)
+        }
     }
+
+    /**
+     *
+     */
+    private function importRules($rules)
+    {
+        foreach ($rules as $rule) {
+            $this->importRule($rule['type'], $rule['params']);
+        }
+    }
+
+    /**
+     *
+     */
+    private function importRule($type, $params)
+    {
+        $app = $this->getContainer();
+        $content = $app['storage']->getContent($params['parent'], ['hydrate' => false]);
+
+        switch ($type) {
+            case 'contenttype':
+                if ($content && !is_array($content)) {
+                    $contenttypeslug = $content->contenttype['slug'];
+                    $id = $content->id;
+                    $this->contenttypeRules["$contenttypeslug/$id"][] = $params['slug'];
+                } elseif (is_array($content)) {
+                    $path = $params['parent'];
+                    $path = trim($path, '/');
+                    $this->contenttypeRules[$path][] = $params['slug'];
+                }
+                break;
+
+            case 'query':
+                if ($content && !is_array($content)) {
+                    $contenttypeslug = $content->contenttype['slug'];
+                    $id = $content->id;
+                    $parent = "$contenttypeslug/$id";
+                } elseif (is_array($content)) {
+                    $path = $params['parent'];
+                    $path = trim($path, '/');
+                    $parent = $path;
+                }
+
+                if ($parent) {
+                    /** @var \Bolt\Storage\Entity\Content[] $items */
+                    $items = $app['query']->getContent($params['query'], $params['parameters']);
+                    foreach ($items as $item) {
+                        $contenttypeslug = $item->getContenttype()['slug'];
+                        $id = $item->getId();
+                        $slug = $item->getSlug();
+
+                        $this->parents["$contenttypeslug/$id"] = $parent;
+                        $this->children[$parent][]             = "$contenttypeslug/$id";
+                        $this->slugs["$contenttypeslug/$id"]   = $slug;
+
+                        if (is_array($content)) {
+                            $this->listingRoutes["$contenttypeslug/$id"]  = $this->routes[$parent] . '/' . $slug;
+                        } else {
+                            $this->routes["$contenttypeslug/$id"]  = $this->routes[$parent] . '/' . $slug;
+                        }
+                    }
+                }
+                break;
+
+            default:
+                // log an error invalid rule type found
+        }
+    }
+
+    // -------------------------------------------------------------------------
 
     /**
      * Handles GET requests on the /example/url route.

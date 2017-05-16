@@ -23,17 +23,18 @@ menu: main
 
 
 rules:
-    - type: query
-      query: "blogs where { category: x }"
-      parent: "page/2"
 
     - type: query
-      query: "blogs"
-      parent: "page/1"
+      params:
+        query: "showcases"
+        parameters: { limit: 10, tags: 'sports' }
+        parent: "entry/1"
 
     - type: contenttype
-      contenttype: "blogs"
-      parent: "page/1"
+      params:
+        slug: "pages"
+        parent: "page/9"
+
 
 # Cache
 # -----
@@ -66,3 +67,5 @@ cache:
 # - getChildren(record), array of everything under it (might be "query" and "contenttype" as well)
 # -
 # add permissions to back-end pages !!
+#
+# todo: do we allow rewrites for content listings ??
