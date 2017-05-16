@@ -1,0 +1,68 @@
+# Menu
+# ----
+# The menu structure defined in `app/config/menu.yml` to use for hierarchical
+# routes. Use a name or an array of menu names (in order of fallbacks).
+
+
+menu: main
+# menu: [ main, aside, footer ]
+
+# Rules
+# -----
+# Configure additional rules for handling items dynamically. Think of rules such
+# as: "blog posts of a certain category must fall under a specific parent".
+#
+# The most specific rules need to be on top.
+#
+# Currently, there are two types:
+# - `contenttype`: Applies the rule a whole contenttype, is not constrained by
+#                  a limit. This is a simple, generic and fast check.
+# - `query`: Applies the rule to a setcontent-like query, note that this query
+#            may have an implicit limit. This requires the records to be fetched
+#            from the database.
+
+
+rules:
+    - type: query
+      query: "blogs where { category: x }"
+      parent: "page/2"
+
+    - type: query
+      query: "blogs"
+      parent: "page/1"
+
+    - type: contenttype
+      contenttype: "blogs"
+      parent: "page/1"
+
+# Cache
+# -----
+# Enable cache in order to save the generated look-up table for performance.
+# The duration of the cache is in minutes.
+
+
+cache:
+    enabled: true
+    duration: 10
+
+
+# items collected via rules will be appended to the items defined in `menu.yml`.
+# items defined in `menu.yml` takes precedence over rules (explicit over generic)
+#
+# -- clear cache should clear this cache as well
+# -- check whether the current record is modified AFTER the current cache date    --> if TRUE, rebuild / update this item
+# -- check whether menu.yml has been saved AFTER the cached version               --> if TRUE, rebuild # --> because we don't know what items have been modified (test for equivalence?)
+# -- check whether the current config.yml has been saved AFTER the cached version --> if TRUE, rebuild # --> because we don't know what rules have been modified (test for equivalence?)
+#
+# - on save any record -- maybe not everytime?? when slug has changed??
+# - on save app/config/menu.yml -- always
+# - on save this config.yml -- always
+#
+#
+# 1. generate look-up tables as in Europeana
+# 2. create a record and override link() for canonicals
+# 3. twig:
+# - getParents(record) == getBreadcrumbs(record), array of parents
+# - getChildren(record), array of everything under it (might be "query" and "contenttype" as well)
+# -
+# add permissions to back-end pages !!

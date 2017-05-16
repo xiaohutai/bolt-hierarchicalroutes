@@ -1,0 +1,53 @@
+{
+    "name": "twokings/hierarchical-routes",
+    "description": "Dynamically make hierarchical routes based on the menu configuration",
+    "type": "bolt-extension",
+    "keywords": [
+        "breadcrumbs",
+        "child-page",
+        "hierarchical content",
+        "hierarchical routes",
+        "hierarchy",
+        "menu",
+        "parent-page",
+        "structure",
+        "sub-page"
+    ],
+    "require": {
+        "bolt/bolt": "^3.0"
+    },
+    "require-dev": {
+        "phpunit/phpunit": "^4.7"
+    },
+    "license": "MIT",
+    "authors": [
+        {
+            "name": "Xiao-Hu Tai",
+            "email": "xiao@twokings.nl"
+        }
+    ],
+    "minimum-stability": "dev",
+    "prefer-stable": true,
+    "autoload": {
+        "psr-4": {
+            "Bolt\\Extension\\TwoKings\\HierarchicalRoutes\\": "src"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "Bolt\\Extension\\TwoKings\\HierarchicalRouets\\Tests\\": "tests",
+            "Bolt\\Tests\\": "vendor/bolt/bolt/tests/phpunit/unit/"
+        }
+    },
+    "extra": {
+        "bolt-assets": "web",
+        "bolt-class": "Bolt\\Extension\\TwoKings\\HierarchicalRoutes\\HierarchicalRoutesExtension",
+        "bolt-icon": "bolt-icon.png",
+        "bolt-screenshots": [
+            "screenshots/screenshot1.png"
+        ]
+    },
+    "suggest": {
+        "bacboslab/menueditor": "A visual menu editor for Bolt CMS"
+    }
+}
