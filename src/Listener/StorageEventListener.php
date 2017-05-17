@@ -33,7 +33,7 @@ class StorageEventListener implements EventSubscriberInterface
      */
     public function onPostSave(StorageEvent $event)
     {
-        // $this->app['hierarchicalroutes.service']->rebuild();
+        // $this->app['hierarchicalroutes.service']->build(); // re-build and save
     }
 
     /**
@@ -43,7 +43,7 @@ class StorageEventListener implements EventSubscriberInterface
      */
     public function onPostDelete(StorageEvent $event)
     {
-        // $this->app['hierarchicalroutes.service']->rebuild();
+        // $this->app['hierarchicalroutes.service']->build(); // re-build and save
     }
 
     /**

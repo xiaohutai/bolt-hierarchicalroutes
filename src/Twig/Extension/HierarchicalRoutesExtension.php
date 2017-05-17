@@ -24,7 +24,10 @@ class HierarchicalRoutesExtension extends Extension
         $env  = ['needs_environment' => true];
 
         return [
-            new \Twig_SimpleFunction('something', [HierarchicalRoutesRuntime::class, 'doSomething'], $safe),
+            new \Twig_SimpleFunction('getParent'   , [HierarchicalRoutesRuntime::class, 'getParent'  ], $safe),
+            new \Twig_SimpleFunction('getParents'  , [HierarchicalRoutesRuntime::class, 'getParents' ], $safe),
+            new \Twig_SimpleFunction('getChildren' , [HierarchicalRoutesRuntime::class, 'getChildren'], $safe),
+            new \Twig_SimpleFunction('getSiblings' , [HierarchicalRoutesRuntime::class, 'getSiblings'], $safe),
         ];
     }
 }

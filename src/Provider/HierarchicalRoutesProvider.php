@@ -2,6 +2,8 @@
 
 namespace Bolt\Extension\TwoKings\HierarchicalRoutes\Provider;
 
+use Bolt\Extension\TwoKings\HierarchicalRoutes\Controller\Requirement;
+use Bolt\Extension\TwoKings\HierarchicalRoutes\Controller;
 use Bolt\Extension\TwoKings\HierarchicalRoutes\Service;
 use Bolt\Extension\TwoKings\HierarchicalRoutes\Twig;
 use Bolt\Version as BoltVersion;
@@ -24,12 +26,15 @@ class HierarchicalRoutesProvider implements ServiceProviderInterface
         $app['hierarchicalroutes.service'] = $app->share(
             function (Application $app) {
                 return new Service\HierarchicalRoutesService(
-                    // $app,
-                    // $config,
-                    // $foo,
-                    // $bar,
-                    // $baz
+                    $app['hierarchicalroutes.config'],
+                    $app // todo: for now, see HierarchicalRoutesService class
                 );
+            }
+        );
+
+        $app['hierarchicalroutes.controller.requirement'] = $app->share(
+            function (Application $app) {
+                return new Requirement($app['hierarchicalroutes.service']);
             }
         );
 
