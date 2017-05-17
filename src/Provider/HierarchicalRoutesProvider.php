@@ -29,7 +29,11 @@ class HierarchicalRoutesProvider implements ServiceProviderInterface
             function (Application $app) {
                 return new Service\HierarchicalRoutesService(
                     $app['hierarchicalroutes.config'],
-                    $app // todo: for now, see HierarchicalRoutesService class
+                    $app['config'],
+                    $app['storage'],
+                    $app['query'],
+                    $app['cache'],
+                    $app['logger.system']
                 );
             }
         );

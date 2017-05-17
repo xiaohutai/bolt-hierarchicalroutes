@@ -2,16 +2,12 @@
 
 namespace Bolt\Extension\TwoKings\HierarchicalRoutes;
 
-use Bolt\Asset\File\JavaScript;
-use Bolt\Asset\File\Stylesheet;
-use Bolt\Controller\Zone;
 use Bolt\Events\StorageEvent;
 use Bolt\Events\StorageEvents;
 use Bolt\Extension\SimpleExtension;
 use Bolt\Extension\TwoKings\HierarchicalRoutes\Config\Config;
 use Bolt\Extension\TwoKings\HierarchicalRoutes\Controller\HierarchicalRoutesController;
 use Bolt\Extension\TwoKings\HierarchicalRoutes\Listener\StorageEventListener;
-use Bolt\Menu\MenuEntry;
 use Silex\Application;
 use Silex\ControllerCollection;
 use Symfony\Component\EventDispatcher\EventDispatcherInterface;
