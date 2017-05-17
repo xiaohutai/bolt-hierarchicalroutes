@@ -51,7 +51,7 @@ class HierarchicalRoutesController implements ControllerProviderInterface
             ->match("/{parents}/{slug}", [$this, 'recordPotentialMatch'])
             ->assert('parents', $requirement->anyPotentialParentConstraint())
             ->assert('slug', '[a-zA-Z0-9_\-]+') // this may result in a 404
-            ->bind('hierarchicalroutes.record.fuzzy')
+            ->bind('hierarchicalroutes.record')
         ;
 
         return $ctr;
@@ -63,7 +63,7 @@ class HierarchicalRoutesController implements ControllerProviderInterface
     public function recordExactMatch(Application $app, $slug)
     {
         $content = $app['storage']->getContent(
-            array_search($slug, $this->recordRoutes),
+            array_search($slug, $app['hierarchicalroutes.service']->getRecordRoutes()),
             ['hydrate' => false]
         );
 
@@ -81,7 +81,7 @@ class HierarchicalRoutesController implements ControllerProviderInterface
     {
         return $app['controller.frontend']->listing(
             $app['request'],
-            array_search($slug, $this->listingRoutes)
+            array_search($slug, $app['hierarchicalroutes.service']->getListingRoutes())
         );
     }
 
@@ -92,9 +92,7 @@ class HierarchicalRoutesController implements ControllerProviderInterface
     {
         $app = $this->getContainer();
 
-        // potential 1: contenttype rule match
-
-        $parentsKey = array_search($parents, $this->recordRoutes);
+        $parentsKey = array_search($parents, $app['hierarchicalroutes.service']->getRecordRoutes());
         if (isset($this->contenttypeRules[$parentsKey])) {
 
             foreach ($this->contenttypeRules[$parentsKey] as $contenttypeslug) {

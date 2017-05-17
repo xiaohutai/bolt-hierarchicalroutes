@@ -2,13 +2,15 @@
 
 namespace Bolt\Extension\TwoKings\HierarchicalRoutes\Provider;
 
-use Bolt\Extension\TwoKings\HierarchicalRoutes\Controller\Requirement;
 use Bolt\Extension\TwoKings\HierarchicalRoutes\Controller;
+use Bolt\Extension\TwoKings\HierarchicalRoutes\Controller\Requirement;
+use Bolt\Extension\TwoKings\HierarchicalRoutes\Routing\HierarchicalUrlGenerator;
 use Bolt\Extension\TwoKings\HierarchicalRoutes\Service;
 use Bolt\Extension\TwoKings\HierarchicalRoutes\Twig;
 use Bolt\Version as BoltVersion;
 use Silex\Application;
 use Silex\ServiceProviderInterface;
+use Symfony\Component\Routing\Generator\UrlGeneratorInterface;
 
 /**
  *
@@ -35,6 +37,13 @@ class HierarchicalRoutesProvider implements ServiceProviderInterface
         $app['hierarchicalroutes.controller.requirement'] = $app->share(
             function (Application $app) {
                 return new Requirement($app['hierarchicalroutes.service']);
+            }
+        );
+
+        $app['url_generator'] = $app->extend(
+            'url_generator',
+            function (UrlGeneratorInterface $urlGenerator) use ($app) {
+                return new HierarchicalUrlGenerator($urlGenerator, $app);
             }
         );
 

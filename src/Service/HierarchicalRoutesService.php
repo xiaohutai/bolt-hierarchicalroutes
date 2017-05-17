@@ -18,14 +18,30 @@ class HierarchicalRoutesService
     /** @var Application $app */
     private $app;
     // todo: temporary, search for `$this->app` when refactoring
+    //
     // So far:
     //      - $this->app['menu']
     //      - $this->app['storage']
     //      - $this->app['query']
     //
     // also want:
-    //      - logger
-    //      - cache (filesystem)
+    //      - $this->app['logger.system']
+    //      - $this->app['cache']
+
+    private $cacheDuration = 600;
+
+    /** @var string $cachePrefix */
+    private $cachePrefix = 'hierarchicalroutes-';
+
+    /** @var string[] $properties */
+    private $properties = [
+        'parents',
+        'children',
+        'slugs',
+        'recordRoutes',
+        'listingRoutes',
+        'contenttypeRules',
+    ];
 
     /** @var string[] $parents A mapping from items to their parent */
     private $parents = [];
@@ -56,15 +72,39 @@ class HierarchicalRoutesService
         $this->config = $config;
         $this->app    = $app;
 
+        $this->cacheDuration = $this->config->get('cache/duration', 10) * 60;
+
         $this->build();
+
+        /*
+        dump($this->parents);
+        dump($this->children);
+        dump($this->slugs);
+        //*/
+
+        /*
+        dump($this->recordRoutes);
+        dump($this->listingRoutes);
+        dump($this->contenttypeRules);
+        //*/
     }
 
     /**
      * Builds the hierarchy based on the menu and simple rules.
+     *
+     * @param bool $useCache Whether to fetch information from cache or not.
      */
-    public function build()
+    public function build($useCache = true)
     {
-        // todo: cache
+        if ($this->config->get('cache/enabled', true) && $useCache && $this->fromCache()) {
+            return;
+        }
+
+        if (!$useCache) {
+            $this->app['logger.system']->info('Ignoring cache. Rebuilding hierarchical data.', ['event' => 'extension']);
+        } else {
+            $this->app['logger.system']->info('Cache expired or not found. Rebuilding hierarchical data.', ['event' => 'extension']);
+        }
 
         $menu = $this->config->get('menu');
         if (is_array($menu)) {
@@ -76,6 +116,47 @@ class HierarchicalRoutesService
         }
 
         $this->importRules($this->config->get('rules'));
+
+        if ($this->config->get('cache/enabled', true)) {
+            $this->toCache();
+        }
+    }
+
+    /**
+     * @return `true` if successful, otherwise `false`.
+     */
+    private function fromCache()
+    {
+        foreach ($this->properties as $property) {
+            $this->$property = $this->app['cache']->fetch($this->cachePrefix . $property);
+
+            if ($this->$property === false) {
+                // Reset all properties and import
+                foreach ($this->properties as $prop) {
+                    $this->$prop = [];
+                }
+                return false;
+            }
+        }
+
+        // This will flood the logger system.
+        // $this->app['logger.system']->info('Using cached data', ['event' => 'extension']);
+
+        return true;
+    }
+
+    /**
+     * Stores all data to cache.
+     */
+    private function toCache()
+    {
+        foreach ($this->properties as $property) {
+            $this->app['cache']->save(
+                $this->cachePrefix . $property,
+                $this->$property,
+                $this->cacheDuration
+            );
+        }
     }
 
     /**
@@ -84,9 +165,12 @@ class HierarchicalRoutesService
     private function importMenu($identifier = 'main')
     {
         /** @var \Bolt\Menu\Menu $menu */
-        $menu = $this->app['menu']->menu($identifier);
+        // $menu = $this->app['menu']->menu($identifier);
+        // $menu = $menu->getItems();
 
-        foreach ($menu->getItems() as $item) {
+        $menu = $this->app['config']->get('menu/' . $identifier, []);
+
+        foreach ($menu as $item) {
             $this->importMenuItem($item);
         }
     }
