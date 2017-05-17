@@ -23,7 +23,13 @@ class HierarchicalRoutesProvider implements ServiceProviderInterface
     {
         $app['hierarchicalroutes.service'] = $app->share(
             function (Application $app) {
-                return new Service\HierarchicalRoutesService(); // config, request?
+                return new Service\HierarchicalRoutesService(
+                    // $app,
+                    // $config,
+                    // $foo,
+                    // $bar,
+                    // $baz
+                );
             }
         );
 

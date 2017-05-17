@@ -1,5 +1,7 @@
 # Hierarchical Routes
 
+Heh... The term "Hierarchical Routes" makes no sense.
+
 A simple way to get hierarchical content to work by using `menu.yml`.
 No assumptions or crazy features.
 
@@ -17,9 +19,10 @@ No assumptions or crazy features.
 
 ## Twig functions
 
-- `getParents(record)`
-- `getChildren(record)`
-- `getSiblings(record)`
+- `getParent(record)` - Returns the parent of the current record, otherwise `null`.
+- `getParents(record)` - Returns an array of all the parents of the current record. Useful for breadcrumbs: iterate over `getParents(record)|reverse`.
+- `getChildren(record)` - Returns an array of all the children of the current record.
+- `getSiblings(record)` - Returns an array of all the siblings of the current record.
 
 
 ## See also

@@ -20,7 +20,7 @@ use Bolt\Events\StorageEvent;
 use Bolt\Events\StorageEvents;
 use Bolt\Extension\SimpleExtension;
 use Bolt\Extension\TwoKings\HierarchicalRoutes\Config\Config;
-use Bolt\Extension\TwoKings\HierarchicalRoutes\Controller\ExampleController;
+use Bolt\Extension\TwoKings\HierarchicalRoutes\Controller\HierarchicalRoutesController;
 use Bolt\Extension\TwoKings\HierarchicalRoutes\Listener\StorageEventListener;
 use Bolt\Menu\MenuEntry;
 use Silex\Application;
@@ -42,49 +42,9 @@ class HierarchicalRoutesExtension extends SimpleExtension
     protected function subscribe(EventDispatcherInterface $dispatcher)
     {
         // https://docs.bolt.cm/extensions/essentials#adding-storage-events
-
-        $dispatcher->addListener(StorageEvents::PRE_SAVE, [$this, 'onPreSave']);
-
         $storageEventListener = new StorageEventListener($this->getContainer(), $this->getConfig());
-        $dispatcher->addListener(StorageEvents::POST_SAVE, [$storageEventListener, 'onPostSave']);
-        $dispatcher->addListener(StorageEvents::PRE_DELETE, [$storageEventListener, 'onPreDelete']);
-        $dispatcher->addListener(StorageEvents::POST_DELETE, [$storageEventListener, 'onPostDelete']);
-    }
-
-    /**
-     * Handles PRE_SAVE storage event
-     *
-     * @param StorageEvent $event
-     */
-    public function onPreSave(StorageEvent $event)
-    {
-        $contenttype = $event->getContentType();
-        $record = $event->getContent();
-        $created = $event->isCreate();
-        // ...
-    }
-
-    /**
-     * {@inheritdoc}
-     */
-    protected function registerAssets()
-    {
-        return [
-            // Web assets that will be loaded in the frontend
-            new Stylesheet('extension.css'),
-            new JavaScript('extension.js'),
-            // Web assets that will be loaded in the backend
-            (new Stylesheet('clippy.js/clippy.css'))->setZone(Zone::BACKEND),
-            (new JavaScript('clippy.js/clippy.min.js'))->setZone(Zone::BACKEND),
-        ];
-    }
-
-    /**
-     * {@inheritdoc}
-     */
-    protected function registerTwigPaths()
-    {
-        return ['templates'];
+        $dispatcher->addListener(StorageEvents::POST_SAVE, [$storageEventListener, 'onPostSave']);     // todo: rebuild cache?
+        $dispatcher->addListener(StorageEvents::POST_DELETE, [$storageEventListener, 'onPostDelete']); // todo: rebuild cache?
     }
 
     /**
@@ -93,8 +53,6 @@ class HierarchicalRoutesExtension extends SimpleExtension
     protected function registerTwigFunctions()
     {
         return [
-            'my_twig_function' => 'myTwigFunction',
-            // testing
             'getParent'        => 'getParent',
             'getParents'       => 'getParents',
             'getChildren'      => 'getChildren',
@@ -103,29 +61,7 @@ class HierarchicalRoutesExtension extends SimpleExtension
     }
 
     /**
-     * The callback function when {{ my_twig_function() }} is used in a template.
-     *
-     * @return string
-     */
-    public function myTwigFunction()
-    {
-        $context = [
-            'something' => mt_rand(),
-        ];
-
-        return $this->renderTemplate('extension.twig', $context);
-    }
-
-    /**
      * {@inheritdoc}
-     *
-     * Extending the backend menu:
-     *
-     * You can provide new Backend sites with their own menu option and template.
-     *
-     * Here we will add a new route to the system and register the menu option in the backend.
-     *
-     * You'll find the new menu option under "Extras".
      */
     protected function registerMenuEntries()
     {
@@ -147,19 +83,14 @@ class HierarchicalRoutesExtension extends SimpleExtension
 
     /**
      * {@inheritdoc}
-     *
-     * Mount the ExampleController class to all routes that match '/example/url/*'
-     *
-     * To see specific bindings between route and controller method see 'connect()'
-     * function in the ExampleController class.
      */
     protected function registerFrontendControllers()
     {
-        $app = $this->getContainer();
+        $app    = $this->getContainer();
         $config = $this->getConfig();
 
         return [
-            '/example/url' => new ExampleController($config),
+            '/' => new HierarchicalRoutesController($config),
         ];
     }
 
@@ -501,18 +432,24 @@ class HierarchicalRoutesExtension extends SimpleExtension
     // todo: These Twig functions do NOT use the dynamic 'contenttype' items yet
 
     /**
+     * Returns the parent of the current record, otherwise `null`.
      *
+     * @return The current record's parent.
      */
     public function getParent($record)
     {
         $contenttypeslug = $record->contenttype['slug'];
         $id = $record->id;
-        return $this->parents["$contenttypeslug/$id"];
+        return isset($this->parents["$contenttypeslug/$id"]) ? $this->parents["$contenttypeslug/$id"] : null;
     }
 
     /**
+     * Returns an array of all the parents of the current record. This is useful
+     * for breadcrumbs: iterate over `getParents(record)|reverse`.
+     *
      * [ parent, grandparent, great-grandparent, ... ]
-     * For breadcrumbs, use `getParents(record)|reverse`
+     *
+     * @return An array of the current record's parents.
      */
     public function getParents($record)
     {
@@ -521,13 +458,12 @@ class HierarchicalRoutesExtension extends SimpleExtension
         $id = $record->id;
         $parent = "$contenttypeslug/$id";
 
-        do {
+        while (isset($this->parents[$parent])) {
             $parent = $this->parents[$parent];
             if ($parent !== null) {
                 $parents[] = $parent;
             }
-            $slug = $parent;
-        } while ($slug !== null);
+        }
 
         return $parents;
     }
@@ -551,7 +487,7 @@ class HierarchicalRoutesExtension extends SimpleExtension
     }
 
     /**
-     * Returns siblings but not myself ??
+     * Returns siblings but not myself
      */
     public function getSiblings($record)
     {
@@ -559,14 +495,13 @@ class HierarchicalRoutesExtension extends SimpleExtension
         $id = $record->id;
 
         $parent = $this->getParent($record);
-        $siblings = array_filter($this->parents, function($k, $v){
+
+        $siblings = array_filter($this->parents, function($v, $k) use ($parent, $contenttypeslug, $id) {
             return $v === $parent && $k !== "$contenttypeslug/$id";
         }, ARRAY_FILTER_USE_BOTH);
-        // $siblings = $this->children[$parent]; // then remove?
 
-        return $siblings;
+        return array_values($siblings);
     }
-
 
     // -------------------------------------------------------------------------
 
@@ -627,7 +562,7 @@ class HierarchicalRoutesExtension extends SimpleExtension
     {
         return [
             $this,
-            new Provider\HierarchicalRoutesProvider()
+            new Provider\HierarchicalRoutesProvider(),
         ];
     }
 }
