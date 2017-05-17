@@ -90,12 +90,11 @@ class HierarchicalRoutesController implements ControllerProviderInterface
      */
     public function recordPotentialMatch(Application $app, $parents, $slug)
     {
-        $app = $this->getContainer();
-
+        // todo: re-write this part, as some parts are better off in Service ??
         $parentsKey = array_search($parents, $app['hierarchicalroutes.service']->getRecordRoutes());
-        if (isset($this->contenttypeRules[$parentsKey])) {
-
-            foreach ($this->contenttypeRules[$parentsKey] as $contenttypeslug) {
+        $rules = $app['hierarchicalroutes.service']->getContentTypeRules();
+        if (isset($rules[$parentsKey])) {
+            foreach ($rules[$parentsKey] as $contenttypeslug) {
                 $content = $app['storage']->getContent("$contenttypeslug/$slug", ['hydrate' => false]);
                 if ($content) {
                     return $app['controller.frontend']->record(
@@ -107,6 +106,6 @@ class HierarchicalRoutesController implements ControllerProviderInterface
             }
         }
 
-        $this->abort(Response::HTTP_NOT_FOUND, "Page $parents/$slug not found.");
+        $app->abort(Response::HTTP_NOT_FOUND, "Page $parents/$slug not found.");
     }
 }

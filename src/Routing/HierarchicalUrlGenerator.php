@@ -39,23 +39,29 @@ class HierarchicalUrlGenerator implements UrlGeneratorInterface, ConfigurableReq
     public function generate($name, $parameters = [], $referenceType = UrlGeneratorInterface::ABSOLUTE_PATH)
     {
         if ($name == 'contentlink') {
-            $singular_slug = $parameters['contenttypeslug'];
+            $singular_slug   = $parameters['contenttypeslug'];
             $contenttypeslug = $this->singularToPluralContentTypeSlug($singular_slug);
-            $id = $parameters['id'];
+            $id              = $parameters['id'];
+            $slug            = $parameters['slug'];
 
             $recordRoutes = $this->app['hierarchicalroutes.service']->getRecordRoutes();
             if (isset($recordRoutes["$contenttypeslug/$id"])) {
                 return '/' . $recordRoutes["$contenttypeslug/$id"];
             }
 
-            // todo: apply contenttype rules
+            // For `contenttype` rules
+            $parent = $this->app['hierarchicalroutes.service']->getParentLinkForContentType($contenttypeslug);
+
+            if ($parent) {
+                return "/$parent/$slug";
+            }
         }
 
         return $this->wrapped->generate($name, $parameters, $referenceType);
     }
 
     /**
-     * helper
+     * @param string $singular_slug
      */
     private function singularToPluralContentTypeSlug($singular_slug)
     {
@@ -65,7 +71,7 @@ class HierarchicalUrlGenerator implements UrlGeneratorInterface, ConfigurableReq
                 return isset($type['slug']) ? $type['slug'] : $key;
             }
         }
-        return false;
+        return null;
     }
 
     /**

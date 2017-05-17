@@ -375,6 +375,26 @@ class HierarchicalRoutesService
         return array_values($siblings);
     }
 
+    public function getParentLinkForContentType($contenttypeslug)
+    {
+        foreach ($this->contenttypeRules as $parent => $contenttypes) {
+            if (in_array($contenttypeslug, $contenttypes)) {
+                return $this->recordRoutes[$parent];
+            }
+        }
+
+        return null;
+    }
+
+    public function getPotentialParents()
+    {
+        $potentials = [];
+        foreach(array_keys($this->contenttypeRules) as $parent) {
+            $potentials[] = $this->recordRoutes[$parent];
+        }
+        return $potentials;
+    }
+
     /**
      *
      */
@@ -394,7 +414,7 @@ class HierarchicalRoutesService
     /**
      *
      */
-    public function getContenttypeRules()
+    public function getContentTypeRules()
     {
         return $this->contenttypeRules;
     }

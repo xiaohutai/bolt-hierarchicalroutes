@@ -41,7 +41,7 @@ class Requirement
      */
     public function anyPotentialParentConstraint()
     {
-        return $this->createConstraints(array_keys($this->service->getContenttypeRules()));
+        return $this->createConstraints($this->service->getPotentialParents());
     }
 
     /**
