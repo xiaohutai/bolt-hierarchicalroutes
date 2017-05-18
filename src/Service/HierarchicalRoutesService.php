@@ -285,6 +285,7 @@ class HierarchicalRoutesService
                 break;
 
             case 'query':
+                $parent = false;
                 if ($content && !is_array($content)) {
                     $contenttypeslug = $content->contenttype['slug'];
                     $id = $content->id;
