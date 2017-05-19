@@ -241,7 +241,7 @@ class HierarchicalRoutesService
             $path = trim($path, '/');
 
             // 'overwrite-duplicates'
-            if (!isset($this->slugs["$contenttype/$id"]) || $this->config->get('overwrite-duplicates', true)) {
+            if (!isset($this->slugs[$path]) || $this->config->get('overwrite-duplicates', true)) {
                 $this->parents[$path] = $parent;
                 $this->slugs[$path]   = $path;
                 $this->listingRoutes[$path]  = $parent ? $this->recordRoutes[$parent] . '/' . $path : $path;

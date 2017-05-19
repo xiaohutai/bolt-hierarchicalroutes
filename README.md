@@ -16,7 +16,10 @@ edit your extension visually. Menu items that are only defined as `link:` are
 ignored.
 
 Make sure a record exists only once in the menu tree. There is no guarantee that
-this extension will behave as intended if you don't.
+this extension will behave as intended if you don't. Currently, there is a
+setting `overwrite-duplicates` that allows you to always or never overwrite
+existing items.
+
 
 ## Configuration
 
@@ -24,15 +27,19 @@ this extension will behave as intended if you don't.
 - `rules`: apply some sets of content under a (parent) node
   - 'type: contenttype': put all items from a specific contenttype under a node.
   - 'type: query': use a `setcontent`-like query to put a whole set under a node.
-- `cache`: enable caching
+- `cache`: enable caching and set the cache duration in minutes
+- `settings`: other settings
+  - `overwrite-duplicates`: allow duplicates to be overwritten, or not
+  - `rebuild-on-save`: allow cache to be rebuilt on record save/delete
 
 
 ## Cache
 
-By default, caching is enabled. The internal hierarchy will be rebuilt on every
-record's save and delete event. However, this is not done after saving config
-files (`menu.yml` and `hierarchicalroutes.twokings.yml`), so clear the cache
-when editing these, or wait until the cache expires.
+By default, caching is enabled. By default (under `rebuild-on-save`), the
+internal hierarchy will be rebuilt on every record's save and delete event.
+However, this is not done after saving config files (`menu.yml` and
+`hierarchicalroutes.twokings.yml`), so clear the cache when editing these, or
+wait until the cache expires.
 
 
 ## Twig functions
@@ -47,21 +54,15 @@ when editing these, or wait until the cache expires.
 
 ### On Handling duplicates
 
-Currently earlier data will be overwritten by later data, but that does not
-necessarily make much sense. Then again, would we want to protect against every
-possible case.
+There is an option for overwriting existing items. However, that still does not
+make a lot of sense. What should happen to its children? Perhaps an option is to
+add a duplicate node, but that would make it a bit complexer.
 
 
 ### On Handling Circular References
 
 I am not sure if this can happen though. If it does, it will most likely be
 related to duplicate items, i.e. multiple entries of a record in the menu(s).
-
-
-### On Performance
-
-Still not sure what will happen if rebuilding on every save will slow things
-down, when dealing with enormous amount of records.
 
 
 ### On Refactoring
