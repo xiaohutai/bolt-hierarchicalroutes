@@ -49,14 +49,21 @@ cache:
 #                       found. Basically always overwrite (keep last value)
 #                       versus never overwrite (keep first value).
 #
+#                       Note that this handling of duplicates does not make much
+#                       sense. There _should_ be no duplicates. This feature
+#                       might change in the future.
+#
 # rebuild-on-save: Rebuild hierarchy after saving or deleting a record. Only
-#                  used when caching is enabled.
+#                  used when caching is enabled. This is useful if rebuilding
+#                  the hierarchy costs some time. In that case, you might want
+#                  to clear the cache manually and have a longer than default
+#                  cache duration.
 #
 # override-slugs: Allow (slugifized) names in `menu.yml` override the slugs
-#                 defined in the records.
+#                 defined in the records. Not implemented yet.
 #
 
 settings:
     overwrite-duplicates : true
     rebuild-on-save      : true
-    override-slugs       : true -- todo: potential feature in the future
+    override-slugs       : false # -- todo: not implemented yet.

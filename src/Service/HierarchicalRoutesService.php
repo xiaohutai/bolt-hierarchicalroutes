@@ -218,12 +218,16 @@ class HierarchicalRoutesService
             $slug        = $content->values['slug'];
             $contenttype = $content->contenttype['slug']; // $content->contenttype['singular_slug'];
 
-            $this->parents["$contenttype/$id"] = $parent;
-            $this->slugs["$contenttype/$id"]   = $slug;
-            $this->recordRoutes["$contenttype/$id"]  = $parent ? $this->recordRoutes[$parent] . '/' . $slug : $slug;
 
-            if ($parent) {
-                $this->children[$parent][] = "$contenttype/$id"; // but also add links and other items ???
+            // 'overwrite-duplicates'
+            if (!isset($this->slugs["$contenttype/$id"]) || $this->config->get('overwrite-duplicates', true)) {
+                $this->parents["$contenttype/$id"] = $parent;
+                $this->slugs["$contenttype/$id"]   = $slug;
+                $this->recordRoutes["$contenttype/$id"]  = $parent ? $this->recordRoutes[$parent] . '/' . $slug : $slug;
+
+                if ($parent) {
+                    $this->children[$parent][] = "$contenttype/$id"; // but also add links and other items ???
+                }
             }
 
             if (isset($item['submenu'])) {
@@ -236,10 +240,12 @@ class HierarchicalRoutesService
             $path = $item['path'];
             $path = trim($path, '/');
 
-            $this->parents[$path] = $parent;
-            $this->slugs[$path]   = $path;
-            // $this->recordRoutes[$path]  = $parent ? $this->recordRoutes[$parent] . '/' . $path : $path;
-            $this->listingRoutes[$path]  = $parent ? $this->recordRoutes[$parent] . '/' . $path : $path;
+            // 'overwrite-duplicates'
+            if (!isset($this->slugs["$contenttype/$id"]) || $this->config->get('overwrite-duplicates', true)) {
+                $this->parents[$path] = $parent;
+                $this->slugs[$path]   = $path;
+                $this->listingRoutes[$path]  = $parent ? $this->recordRoutes[$parent] . '/' . $path : $path;
+            }
 
             if (isset($item['submenu'])) {
                 foreach ($item['submenu'] as $subitem) {
@@ -307,9 +313,12 @@ class HierarchicalRoutesService
                         $id = $item->getId();
                         $slug = $item->getSlug();
 
-                        $this->parents["$contenttypeslug/$id"] = $parent;
-                        $this->children[$parent][]             = "$contenttypeslug/$id";
-                        $this->slugs["$contenttypeslug/$id"]   = $slug;
+                        // 'overwrite-duplicates'
+                        if (!isset($this->slugs["$contenttype/$id"]) || $this->config->get('overwrite-duplicates', true)) {
+                            $this->parents["$contenttypeslug/$id"] = $parent;
+                            $this->children[$parent][]             = "$contenttypeslug/$id";
+                            $this->slugs["$contenttypeslug/$id"]   = $slug;
+                        }
 
                         if (is_array($content)) {
                             $this->listingRoutes["$contenttypeslug/$id"]  = $this->recordRoutes[$parent] . '/' . $slug;

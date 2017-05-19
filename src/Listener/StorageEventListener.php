@@ -33,7 +33,12 @@ class StorageEventListener implements EventSubscriberInterface
      */
     public function onPostSave(StorageEvent $event)
     {
-        $this->app['hierarchicalroutes.service']->build(false);
+        $config  = $this->app['hierarchicalroutes.config'];
+        $service = $this->app['hierarchicalroutes.service'];
+
+        if ($config->get('cache/enabled', true) && $config->get('settings/rebuild-on-save', true)) {
+            $service->build(false);
+        }
     }
 
     /**
@@ -43,7 +48,12 @@ class StorageEventListener implements EventSubscriberInterface
      */
     public function onPostDelete(StorageEvent $event)
     {
-        $this->app['hierarchicalroutes.service']->build(false);
+        $config  = $this->app['hierarchicalroutes.config'];
+        $service = $this->app['hierarchicalroutes.service'];
+
+        if ($config->get('cache/enabled', true) && $config->get('settings/rebuild-on-save', true)) {
+            $service->build(false);
+        }
     }
 
     /**
