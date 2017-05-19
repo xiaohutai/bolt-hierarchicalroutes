@@ -94,7 +94,7 @@ class HierarchicalRoutesService
         $this->cache      = $cache;
         $this->logger     = $logger;
 
-        $this->cacheDuration = $this->config->get('cache')['duration'] * 60;
+        $this->cacheDuration = $this->config->get('cache/duration', 10) * 60;
 
         $this->build();
 
@@ -118,7 +118,7 @@ class HierarchicalRoutesService
      */
     public function build($useCache = true)
     {
-        if ($this->config->get('cache')['enabled'] && $useCache && $this->fromCache()) {
+        if ($this->config->get('cache/enabled', true) && $useCache && $this->fromCache()) {
             return;
         }
 
@@ -137,9 +137,12 @@ class HierarchicalRoutesService
             $this->importMenu($menu);
         }
 
-        $this->importRules($this->config->get('rules'));
+        $rules = $this->config->get('rules', []);
+        if (is_array($rules)) {
+            $this->importRules();
+        }
 
-        if ($this->config->get('cache')['enabled']) {
+        if ($this->config->get('cache/enabled', true)) {
             $this->toCache();
         }
     }

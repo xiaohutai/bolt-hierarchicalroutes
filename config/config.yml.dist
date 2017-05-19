@@ -22,17 +22,15 @@ menu: main
 #            from the database.
 
 rules:
-
-    - type: query
-      params:
-        query: "showcases"
-        parameters: { limit: 10, tags: 'sports' }
-        parent: "entry/1"
-
-    - type: contenttype
-      params:
-        slug: "pages"
-        parent: "entry/1"
+    # - type: query
+    #   params:
+    #     query: "showcases"
+    #     parameters: { limit: 10, tags: 'sports' }
+    #     parent: "entry/1"
+    # - type: contenttype
+    #   params:
+    #     slug: "pages"
+    #     parent: "entry/1"
 
 
 # Cache
@@ -59,6 +57,6 @@ cache:
 #
 
 settings:
-    overwrite-duplicates : true -- todo: potential feature in the future
-    rebuild-on-save      : true -- todo: potential feature in the future
+    overwrite-duplicates : true
+    rebuild-on-save      : true
     override-slugs       : true -- todo: potential feature in the future
