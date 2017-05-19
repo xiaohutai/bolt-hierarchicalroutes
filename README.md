@@ -25,8 +25,8 @@ existing items.
 
 - `menu`: select which menu to check for as the hierarchical tree
 - `rules`: apply some sets of content under a (parent) node
-  - 'type: contenttype': put all items from a specific contenttype under a node.
-  - 'type: query': use a `setcontent`-like query to put a whole set under a node.
+  - `type: contenttype`: put all items from a specific contenttype under a node
+  - `type: query`: use a `setcontent`-like query to put a whole set under a node
 - `cache`: enable caching and set the cache duration in minutes
 - `settings`: other settings
   - `overwrite-duplicates`: allow duplicates to be overwritten, or not
@@ -71,6 +71,9 @@ I'm currently using both `'storage'` and `'query'` for `getContent`:
 
 - `$app['storage']->getContent` => `\Bolt\Legacy\Content` (_to be deprecated_)
 - `$app['query']->getContent`   => `\Bolt\Storage\Entity\Content`
+
+There's a potential bug with `query` depending on your definitions inside
+`contenttypes.yml`. See [Bolt Issue 6691](https://github.com/bolt/bolt/issues/6691).
 
 
 ### On mounting Taxonomy pages on a Node
