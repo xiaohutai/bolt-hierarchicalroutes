@@ -1,7 +1,7 @@
 # Menu
 # ----
 # The menu structure defined in `app/config/menu.yml` to use for hierarchical
-# routes. Use a name or an array of menu names (in order of fallbacks).
+# routes. Use a name or an array of menu names.
 
 menu: main
 # menu: [ main, aside, footer ]
@@ -12,11 +12,11 @@ menu: main
 # Configure additional rules for handling items dynamically. Think of rules such
 # as: "blog posts of a certain category must fall under a specific parent".
 #
-# The most specific rules need to be on top.
+# The most specific rules need to be on top. Currently, there are two types:
 #
-# Currently, there are two types:
 # - `contenttype`: Applies the rule a whole contenttype, and is not constrained
 #                  by a limit. This is a simple, generic and fast check.
+#
 # - `query`: Applies the rule to a setcontent-like query, note that this query
 #            may have an implicit limit. This requires the records to be fetched
 #            from the database.
@@ -43,3 +43,22 @@ rules:
 cache:
     enabled: true
     duration: 10
+
+
+# Settings
+# --------
+# overwrite-duplicates: Whether to overwrite when a duplicate entry has been
+#                       found. Basically always overwrite (keep last value)
+#                       versus never overwrite (keep first value).
+#
+# rebuild-on-save: Rebuild hierarchy after saving or deleting a record. Only
+#                  used when caching is enabled.
+#
+# override-slugs: Allow (slugifized) names in `menu.yml` override the slugs
+#                 defined in the records.
+#
+
+settings:
+    overwrite-duplicates : true -- todo: potential feature in the future
+    rebuild-on-save      : true -- todo: potential feature in the future
+    override-slugs       : true -- todo: potential feature in the future

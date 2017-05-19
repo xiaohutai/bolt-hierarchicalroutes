@@ -12,11 +12,11 @@ No assumptions or crazy features. This extensions allows you to do a few things:
 
 Make sure to use `path: {contenttypeslug}/{id}` convention as much as possible.
 Use the [Menu Editor](https://github.com/bacbos/bolt-menu-editor) extension to
-edit your extension visually.
+edit your extension visually. Menu items that are only defined as `link:` are
+ignored.
 
 Make sure a record exists only once in the menu tree. There is no guarantee that
 this extension will behave as intended if you don't.
-
 
 ## Configuration
 
