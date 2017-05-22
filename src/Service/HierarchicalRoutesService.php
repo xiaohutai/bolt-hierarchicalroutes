@@ -221,6 +221,14 @@ class HierarchicalRoutesService
 
             // 'overwrite-duplicates'
             if (!isset($this->slugs["$contenttype/$id"]) || $this->config->get('settings/overwrite-duplicates', true)) {
+
+                $oldParent = isset($this->parents["$contenttype/$id"]) ? $this->parents["$contenttype/$id"] : null;
+                if ($oldParent) {
+                    $this->children[$oldParent] = array_filter($this->children[$oldParent], function($v, $k) {
+                        return $v !== "$contenttype/$id";
+                    }, ARRAY_FILTER_USE_BOTH);
+                }
+
                 $this->parents["$contenttype/$id"] = $parent;
                 $this->slugs["$contenttype/$id"]   = $slug;
                 $this->recordRoutes["$contenttype/$id"]  = $parent ? $this->recordRoutes[$parent] . '/' . $slug : $slug;
@@ -315,6 +323,13 @@ class HierarchicalRoutesService
 
                         // 'overwrite-duplicates'
                         if (!isset($this->slugs["$contenttypeslug/$id"]) || $this->config->get('settings/overwrite-duplicates', true)) {
+                            $oldParent = isset($this->parents["$contenttypeslug/$id"]) ? $this->parents["$contenttypeslug/$id"] : null;
+                            if ($oldParent) {
+                                $this->children[$oldParent] = array_filter($this->children[$oldParent], function($v, $k) use ($contenttypeslug, $id) {
+                                    return $v !== "$contenttypeslug/$id";
+                                }, ARRAY_FILTER_USE_BOTH);
+                            }
+
                             $this->parents["$contenttypeslug/$id"] = $parent;
                             $this->children[$parent][]             = "$contenttypeslug/$id";
                             $this->slugs["$contenttypeslug/$id"]   = $slug;
