@@ -139,7 +139,7 @@ class HierarchicalRoutesService
 
         $rules = $this->config->get('rules', []);
         if (is_array($rules)) {
-            $this->importRules();
+            $this->importRules($rules);
         }
 
         if ($this->config->get('cache/enabled', true)) {
@@ -314,7 +314,7 @@ class HierarchicalRoutesService
                         $slug = $item->getSlug();
 
                         // 'overwrite-duplicates'
-                        if (!isset($this->slugs["$contenttype/$id"]) || $this->config->get('overwrite-duplicates', true)) {
+                        if (!isset($this->slugs["$contenttypeslug/$id"]) || $this->config->get('overwrite-duplicates', true)) {
                             $this->parents["$contenttypeslug/$id"] = $parent;
                             $this->children[$parent][]             = "$contenttypeslug/$id";
                             $this->slugs["$contenttypeslug/$id"]   = $slug;
@@ -343,7 +343,10 @@ class HierarchicalRoutesService
     {
         $contenttypeslug = $record->contenttype['slug'];
         $id = $record->id;
-        return isset($this->parents["$contenttypeslug/$id"]) ? $this->parents["$contenttypeslug/$id"] : null;
+
+        $parent = isset($this->parents["$contenttypeslug/$id"]) ? $this->parents["$contenttypeslug/$id"] : null;
+
+        return $this->hydrateRecord($parent);
     }
 
     /**
@@ -368,7 +371,7 @@ class HierarchicalRoutesService
             }
         }
 
-        return $parents;
+        return array_map([$this, 'hydrateRecord'], $parents);
     }
 
     /**
@@ -380,7 +383,10 @@ class HierarchicalRoutesService
         $id = $record->id;
 
         if (isset($this->children["$contenttypeslug/$id"])) {
-            return $this->children["$contenttypeslug/$id"];
+            return array_map(
+                [$this, 'hydrateRecord'],
+                $this->children["$contenttypeslug/$id"]
+            );
         }
 
         return [];
@@ -403,9 +409,32 @@ class HierarchicalRoutesService
             return $v === $parent && $k !== "$contenttypeslug/$id";
         }, ARRAY_FILTER_USE_BOTH);
 
-        return array_values($siblings);
+        return array_map(
+            [$this, 'hydrateRecord'],
+            array_values($siblings)
+        );
     }
 
+    /**
+     * Go from a string like 'entry/1' to a real record
+     *
+     * @param string $item
+     * @return \Bolt\Legacy\Content
+     */
+    private function hydrateRecord($item)
+    {
+        // return array_map([$this, 'hydrateRecord'], $array);
+        // return $this->hydrateRecord($item);
+        if ($item) {
+            return $this->storage->getContent($item);
+        } else {
+            return $item; // or null
+        }
+    }
+
+    /**
+     *
+     */
     public function getParentLinkForContentType($contenttypeslug)
     {
         foreach ($this->contenttypeRules as $parent => $contenttypes) {
@@ -417,6 +446,9 @@ class HierarchicalRoutesService
         return null;
     }
 
+    /**
+     *
+     */
     public function getPotentialParents()
     {
         $potentials = [];
