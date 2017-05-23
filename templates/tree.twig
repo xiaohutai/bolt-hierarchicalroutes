@@ -1,0 +1,33 @@
+{% extends '_base/_page-nav.twig' %}
+
+{% macro makeItem(item, children) %}
+    <li>
+        {% setcontent record = item %}
+        <code>[{{  record.contenttype.slug }}/{{ record.id }}]</code> <a href="{{ record.link }}">{{ record.title }}</a>
+        <ul>
+            {% for i, j in children %}
+            {{ _self.makeItem(i, j) }}
+            {% endfor %}
+        </ul>
+    </li>
+{% endmacro %}
+
+{% import _self as macros %}
+
+{% block page_nav title %}
+
+{% block page_title __(title) %}
+
+{% block page_main %}
+
+    {#
+    {{ dump(tree) }}
+    #}
+
+    <ul class="collapsibleList">
+    {% for node, children in tree %}
+        {{ _self.makeItem(node, children) }}
+    {% endfor %}
+    </ul>
+
+{% endblock page_main %}

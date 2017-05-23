@@ -496,4 +496,39 @@ class HierarchicalRoutesService
     {
         return $this->contenttypeRules;
     }
+
+    /** @var array $tree */
+    private $tree = [];
+
+    /**
+     * @return array
+     */
+    public function getTree()
+    {
+        $tree = [];
+
+        foreach ($this->parents as $root => $parent) {
+            if ($parent === null) {
+                $tree[$root] = $this->makeTreeItem($root);
+            }
+        }
+
+        return $tree;
+    }
+
+    /**
+     * @return array
+     */
+    private function makeTreeItem($item) {
+        $result = [];
+
+        if (isset($this->children[$item])) {
+            foreach ($this->children[$item] as $subitem) {
+                $result[$subitem] = $this->makeTreeItem($subitem);
+            }
+        }
+
+        return $result;
+    }
+
 }
