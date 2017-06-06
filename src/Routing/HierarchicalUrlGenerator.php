@@ -41,8 +41,8 @@ class HierarchicalUrlGenerator implements UrlGeneratorInterface, ConfigurableReq
         if ($name == 'contentlink') {
             $singular_slug   = $parameters['contenttypeslug'];
             $contenttypeslug = $this->singularToPluralContentTypeSlug($singular_slug);
-            $id              = $parameters['id'];
-            $slug            = $parameters['slug'];
+            $id              = isset($parameters['id'])? $parameters['id'] : null;
+            $slug            = isset($parameters['slug'])? $parameters['slug'] : null;
 
             $recordRoutes = $this->app['hierarchicalroutes.service']->getRecordRoutes();
             if (isset($recordRoutes["$contenttypeslug/$id"])) {
