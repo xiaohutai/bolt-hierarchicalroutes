@@ -32,7 +32,7 @@ class HierarchicalRoutesProvider implements ServiceProviderInterface
                     $app['config'],
                     $app['storage.lazy'],
                     $app['query'],
-                    $app['cache'],
+                    $app['filesystem'],
                     $app['logger.system']
                 );
             }

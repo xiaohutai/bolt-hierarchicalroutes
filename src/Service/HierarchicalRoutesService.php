@@ -2,8 +2,8 @@
 
 namespace Bolt\Extension\TwoKings\HierarchicalRoutes\Service;
 
-use Bolt\Cache;
 use Bolt\Extension\TwoKings\HierarchicalRoutes\Config\Config;
+use Bolt\Filesystem\Manager;
 use Bolt\Storage\EntityManagerInterface;
 use Bolt\Storage\Query\Query;
 use Monolog\Logger;
@@ -28,14 +28,14 @@ class HierarchicalRoutesService
     /** @var Query $query */
     private $query;
 
-    /** @var Cache $cache */
-    private $cache;
+    /** @var Manager $filesystem */
+    private $filesystem;
 
     /** @var Logger $logger */
     private $logger;
 
-    /** @var string $cachePrefix */
-    private $cachePrefix = 'hierarchicalroutes-';
+    /** @var string $cachePath */
+    private $cachePath = 'config://extensions/hierarchicalroutes';
 
     /** @var string[] $properties */
     private $properties = [
@@ -72,7 +72,7 @@ class HierarchicalRoutesService
      * @param \Bolt\Config            $boltConfig
      * @param EntityManagerInterface  $storage
      * @param Query                   $query
-     * @param Cache                   $cache
+     * @param Manager                 $filesystem
      * @param Logger                  $logger
      */
     public function __construct(
@@ -80,7 +80,7 @@ class HierarchicalRoutesService
         \Bolt\Config            $boltConfig,
         EntityManagerInterface  $storage,
         Query                   $query,
-        Cache                   $cache,
+        Manager                 $filesystem,
         Logger                  $logger
     )
     {
@@ -88,7 +88,7 @@ class HierarchicalRoutesService
         $this->boltConfig = $boltConfig;
         $this->storage    = $storage;
         $this->query      = $query;
-        $this->cache      = $cache;
+        $this->filesystem = $filesystem;
         $this->logger     = $logger;
 
         /**
@@ -161,8 +161,13 @@ class HierarchicalRoutesService
     private function fromCache()
     {
         foreach ($this->properties as $property) {
-            // todo: rewrite using filesystem
-            $this->$property = $this->cache->fetch($this->cachePrefix . $property);
+
+            $this->$property = false;
+            $fullPath = sprintf("%s/%s.json", $this->cachePath, $property);
+
+            if ($this->filesystem->has($fullPath)) {
+                $this->$property = json_decode($this->filesystem->read($fullPath), true);
+            }
 
             if ($this->$property === false) {
                 // Reset all properties and import
@@ -181,10 +186,12 @@ class HierarchicalRoutesService
      */
     private function toCache()
     {
+        $this->filesystem->createDir($this->cachePath);
+
         foreach ($this->properties as $property) {
-            $this->cache->save(
-                $this->cachePrefix . $property,
-                $this->$property
+            $this->filesystem->put(
+                sprintf("%s/%s.json", $this->cachePath, $property),
+                json_encode($this->$property)
             );
         }
     }
