@@ -1,15 +1,29 @@
 {% extends '_base/_page-nav.twig' %}
 
 {% macro makeItem(item, children) %}
+
+    {% setcontent record = item %}
+    {% set title %}
+        <code>[{{ record.contenttype.slug }}/{{ record.id }}]</code> <a href="{{ record.link }}">{{ record.title }}</a>
+    {% endset %}
+
     <li>
-        {% setcontent record = item %}
-        <code>[{{  record.contenttype.slug }}/{{ record.id }}]</code> <a href="{{ record.link }}">{{ record.title }}</a>
-        <ul>
-            {% for i, j in children %}
-            {{ _self.makeItem(i, j) }}
-            {% endfor %}
-        </ul>
+        {% if children is not empty %}
+            <details>
+                <summary>
+                    {{ title }}
+                </summary>
+                <ol>
+                    {% for i, j in children %}
+                    {{ _self.makeItem(i, j) }}
+                    {% endfor %}
+                </ol>
+            </details>
+        {% else %}
+            {{ title }}
+        {% endif %}
     </li>
+
 {% endmacro %}
 
 {% import _self as macros %}
@@ -20,14 +34,12 @@
 
 {% block page_main %}
 
-    {#
-    {{ dump(tree) }}
-    #}
-
-    <ul class="collapsibleList">
-    {% for node, children in tree %}
-        {{ _self.makeItem(node, children) }}
-    {% endfor %}
-    </ul>
+    <div class="hierarchicalroutes-tree">
+        <ol>
+        {% for node, children in tree %}
+            {{ _self.makeItem(node, children) }}
+        {% endfor %}
+        </ol>
+    </div>
 
 {% endblock page_main %}
