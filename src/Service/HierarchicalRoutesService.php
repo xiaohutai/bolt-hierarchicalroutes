@@ -47,6 +47,9 @@ class HierarchicalRoutesService
         'contenttypeRules',
     ];
 
+    /** @var bool Specifies whether the structures are already built */
+    private $done = false;
+
     /** @var string[] $parents A mapping from items to their parent */
     private $parents = [];
 
@@ -99,7 +102,7 @@ class HierarchicalRoutesService
          * It is generally not a good idea to use the database. So reading from
          * cache, gives us at least something to work with.
          */
-        $this->fromCache();
+        $this->done = $this->fromCache();
     }
 
     /**
@@ -126,7 +129,12 @@ class HierarchicalRoutesService
      */
     public function build($useCache = true)
     {
-        if ($useCache && $this->fromCache()) {
+        // Always rebuild if `hierarchicalroutes.twokings.yml` or `menu.yml` has
+        // been modified
+        $needRebuild = $this->needRebuildBasedOnTimestamps();
+
+        // The constructor has already imported the correct data from cache.
+        if ($useCache && !$needRebuild && $this->done) {
             return;
         }
 
@@ -153,6 +161,34 @@ class HierarchicalRoutesService
     public function rebuild()
     {
         $this->build(false);
+    }
+
+    /**
+     * @return boolean
+     */
+    private function needRebuildBasedOnTimestamps()
+    {
+        $path = sprintf('config://extensions/hierarchicalroutes/%s.json', $this->properties[0]);
+
+        if ( $this->filesystem->has($path) ) {
+            /** @var \Bolt\Filesystem\Handler\YamlFile $configYaml */
+            $configYaml = $this->filesystem->get('config://extensions/hierarchicalroutes.twokings.yml');
+
+            /** @var \Bolt\Filesystem\Handler\YamlFile $menuYaml */
+            $menuYaml = $this->filesystem->get('config://menu.yml');
+
+            /** @var \Bolt\Filesystem\Handler\JsonFile $json */
+            $json = $this->filesystem->get($path);
+
+            $configTimestamp = $configYaml->getTimestamp();
+            $menuTimestamp   = $menuYaml->getTimestamp();
+            $jsonTimestamp   = $json->getTimestamp();
+
+            return ($jsonTimestamp < $configTimestamp) || ($jsonTimestamp < $menuTimestamp);
+        }
+
+        // If no cache file has been found, then we need to rebuild anyways.
+        return true;
     }
 
     /**
