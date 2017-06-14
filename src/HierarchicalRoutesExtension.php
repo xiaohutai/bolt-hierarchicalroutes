@@ -10,8 +10,10 @@ use Bolt\Events\StorageEvents;
 use Bolt\Extension\SimpleExtension;
 use Bolt\Extension\TwoKings\HierarchicalRoutes\Config\Config;
 use Bolt\Extension\TwoKings\HierarchicalRoutes\Controller\HierarchicalRoutesController;
+use Bolt\Extension\TwoKings\HierarchicalRoutes\Listener\KernelEventListener;
 use Bolt\Extension\TwoKings\HierarchicalRoutes\Listener\StorageEventListener;
 use Bolt\Menu\MenuEntry;
+use Bolt\Version as BoltVersion;
 use Silex\Application;
 use Silex\ControllerCollection;
 use Symfony\Component\EventDispatcher\EventDispatcherInterface;
@@ -34,6 +36,8 @@ class HierarchicalRoutesExtension extends SimpleExtension
         $storageEventListener = new StorageEventListener($this->getContainer());
         $dispatcher->addListener(StorageEvents::POST_SAVE, [$storageEventListener, 'onPostSave']);
         $dispatcher->addListener(StorageEvents::POST_DELETE, [$storageEventListener, 'onPostDelete']);
+
+        $dispatcher->addSubscriber(new KernelEventListener($this->getContainer()['hierarchicalroutes.service']));
     }
 
     /**
@@ -51,7 +55,12 @@ class HierarchicalRoutesExtension extends SimpleExtension
      */
     protected function registerBackendRoutes(ControllerCollection $collection)
     {
-        $collection->match('/extend/hierarchical-routes', [$this, 'tree']);
+        $prefix = '/extensions/';
+        if (version_compare(BoltVersion::forComposer(), '3.3.0', '<')) {
+            $prefix = '/extend/';
+        }
+
+        $collection->match($prefix . 'hierarchical-routes', [$this, 'tree']);
     }
 
     /**
@@ -88,6 +97,8 @@ class HierarchicalRoutesExtension extends SimpleExtension
     {
         $app = $this->getContainer();
         /*
+        Working on http://code.stephenmorley.org/javascript/collapsible-lists/
+
         $assets = [
             (new Stylesheet('extension.css')),
             (new JavaScript('CollapsibleLists.js')),

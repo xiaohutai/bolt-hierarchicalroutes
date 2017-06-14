@@ -4,7 +4,7 @@ namespace Bolt\Extension\TwoKings\HierarchicalRoutes\Service;
 
 use Bolt\Cache;
 use Bolt\Extension\TwoKings\HierarchicalRoutes\Config\Config;
-use Bolt\Storage\EntityManager;
+use Bolt\Storage\EntityManagerInterface;
 use Bolt\Storage\Query\Query;
 use Monolog\Logger;
 use Silex\Application;
@@ -22,7 +22,7 @@ class HierarchicalRoutesService
     /** @var \Bolt\Config $boltConfig */
     private $boltConfig;
 
-    /** @var EntityManager $storage */
+    /** @var EntityManagerInterface $storage */
     private $storage;
 
     /** @var Query $query */
@@ -33,9 +33,6 @@ class HierarchicalRoutesService
 
     /** @var Logger $logger */
     private $logger;
-
-    /** @var int $cacheDuration The cache duration in seconds */
-    private $cacheDuration = 600;
 
     /** @var string $cachePrefix */
     private $cachePrefix = 'hierarchicalroutes-';
@@ -71,20 +68,20 @@ class HierarchicalRoutesService
     /**
      * Constructor
      *
-     * @param Config        $config
-     * @param \Bolt\Config  $boltConfig
-     * @param EntityManager $storage
-     * @param Query         $query
-     * @param Cache         $cache
-     * @param Logger        $logger
+     * @param Config                  $config
+     * @param \Bolt\Config            $boltConfig
+     * @param EntityManagerInterface  $storage
+     * @param Query                   $query
+     * @param Cache                   $cache
+     * @param Logger                  $logger
      */
     public function __construct(
-        Config        $config,
-        \Bolt\Config  $boltConfig,
-        EntityManager $storage,
-        Query         $query,
-        Cache         $cache,
-        Logger        $logger
+        Config                  $config,
+        \Bolt\Config            $boltConfig,
+        EntityManagerInterface  $storage,
+        Query                   $query,
+        Cache                   $cache,
+        Logger                  $logger
     )
     {
         $this->config     = $config;
@@ -94,38 +91,43 @@ class HierarchicalRoutesService
         $this->cache      = $cache;
         $this->logger     = $logger;
 
-        $this->cacheDuration = $this->config->get('cache/duration', 10) * 60;
+        /**
+         * For _earlier_ requests, such as:
+         * - \Bolt\Extension\TwoKings\HierarchicalRoutes\ControllerRequirement
+         * - \Bolt\Extension\TwoKings\HierarchicalRoutes\Routing\HierarchicalUrlGenerator
+         *
+         * It is generally not a good idea to use the database. So reading from
+         * cache, gives us at least something to work with.
+         */
+        $this->fromCache();
+    }
 
-        $this->build();
-
-        /*
+    /**
+     * Only for debugging purposes.
+     */
+    private function dump()
+    {
         dump($this->parents);
         dump($this->children);
         dump($this->slugs);
-        //*/
 
-        /*
         dump($this->recordRoutes);
         dump($this->listingRoutes);
         dump($this->contenttypeRules);
-        //*/
     }
 
     /**
      * Builds the hierarchy based on the menu and simple rules.
      *
+     * This function used to be called in the constructor. But since Bolt3.3, it
+     * is called via `Listener\KernelEventListener`.
+     *
      * @param bool $useCache Whether to fetch information from cache or not.
      */
     public function build($useCache = true)
     {
-        if ($this->config->get('cache/enabled', true) && $useCache && $this->fromCache()) {
+        if ($useCache && $this->fromCache()) {
             return;
-        }
-
-        if (!$useCache) {
-            $this->logger->info('Ignoring cache. Rebuilding hierarchical data.', ['event' => 'extension']);
-        } else {
-            $this->logger->info('Cache expired or not found. Rebuilding hierarchical data.', ['event' => 'extension']);
         }
 
         $menu = $this->config->get('menu');
@@ -142,9 +144,15 @@ class HierarchicalRoutesService
             $this->importRules($rules);
         }
 
-        if ($this->config->get('cache/enabled', true)) {
-            $this->toCache();
-        }
+        $this->toCache();
+    }
+
+    /**
+     * Helper function to rebuild the hierarchy structure bypassing the cache.
+     */
+    public function rebuild()
+    {
+        $this->build(false);
     }
 
     /**
@@ -153,6 +161,7 @@ class HierarchicalRoutesService
     private function fromCache()
     {
         foreach ($this->properties as $property) {
+            // todo: rewrite using filesystem
             $this->$property = $this->cache->fetch($this->cachePrefix . $property);
 
             if ($this->$property === false) {
@@ -163,9 +172,6 @@ class HierarchicalRoutesService
                 return false;
             }
         }
-
-        // This will flood the logger system.
-        // $this->logger->info('Using cached data', ['event' => 'extension']);
 
         return true;
     }
@@ -178,8 +184,7 @@ class HierarchicalRoutesService
         foreach ($this->properties as $property) {
             $this->cache->save(
                 $this->cachePrefix . $property,
-                $this->$property,
-                $this->cacheDuration
+                $this->$property
             );
         }
     }
@@ -206,18 +211,17 @@ class HierarchicalRoutesService
     private function importMenuItem($item, $parent = null)
     {
         $content = false;
-
-        if (isset($item['path'])) {
-            /** @var \Bolt\Legacy\Content $content */
+        if (isset($item['path']) && $item['path'] != 'homepage') {
+            // /** @var \Bolt\Legacy\Content $content */
             $content = $this->storage->getContent($item['path'], ['hydrate' => false]);
         }
 
         // Only items with records can be in a hierarchy, otherwise it doesn't make much sense
         if ($content && !is_array($content)) {
+
             $id          = $content->id;
             $slug        = $content->values['slug'];
-            $contenttype = $content->contenttype['slug']; // $content->contenttype['singular_slug'];
-
+            $contenttype = $content->contenttype['slug'];
 
             // 'overwrite-duplicates'
             if (!isset($this->slugs["$contenttype/$id"]) || $this->config->get('settings/overwrite-duplicates', true)) {
@@ -232,6 +236,7 @@ class HierarchicalRoutesService
                 $this->parents["$contenttype/$id"] = $parent;
                 $this->slugs["$contenttype/$id"]   = $slug;
                 $this->recordRoutes["$contenttype/$id"]  = $parent ? $this->recordRoutes[$parent] . '/' . $slug : $slug;
+                $this->recordRoutes["$contenttype/$slug"] = $this->recordRoutes["$contenttype/$id"];
 
                 if ($parent) {
                     $this->children[$parent][] = "$contenttype/$id"; // but also add links and other items ???
@@ -339,6 +344,7 @@ class HierarchicalRoutesService
                             $this->listingRoutes["$contenttypeslug/$id"]  = $this->recordRoutes[$parent] . '/' . $slug;
                         } else {
                             $this->recordRoutes["$contenttypeslug/$id"]  = $this->recordRoutes[$parent] . '/' . $slug;
+                            $this->recordRoutes["$contenttypeslug/$slug"] = $this->recordRoutes["$contenttypeslug/$id"];
                         }
                     }
                 }
@@ -431,15 +437,17 @@ class HierarchicalRoutesService
     }
 
     /**
-     * Go from a string like 'entry/1' to a real record
+     * Go from a string like 'entry/1' to a real record.
+     *
+     * Example:
+     * - return array_map([$this, 'hydrateRecord'], $array);
+     * - return $this->hydrateRecord($item);
      *
      * @param string $item
      * @return \Bolt\Legacy\Content
      */
     private function hydrateRecord($item)
     {
-        // return array_map([$this, 'hydrateRecord'], $array);
-        // return $this->hydrateRecord($item);
         if ($item) {
             return $this->storage->getContent($item);
         } else {
@@ -448,7 +456,7 @@ class HierarchicalRoutesService
     }
 
     /**
-     *
+     * @param $contenttypeslug
      */
     public function getParentLinkForContentType($contenttypeslug)
     {
@@ -497,9 +505,6 @@ class HierarchicalRoutesService
         return $this->contenttypeRules;
     }
 
-    /** @var array $tree */
-    private $tree = [];
-
     /**
      * @return array
      */
@@ -529,6 +534,20 @@ class HierarchicalRoutesService
         }
 
         return $result;
+    }
+
+    /**
+     * @param string $singular_slug
+     */
+    public function singularToPluralContentTypeSlug($singular_slug)
+    {
+        $contenttypes = $this->boltConfig->get('contenttypes');
+        foreach ($contenttypes as $key => $type) {
+            if ($type['singular_slug'] === $singular_slug) {
+                return isset($type['slug']) ? $type['slug'] : $key;
+            }
+        }
+        return null;
     }
 
 }

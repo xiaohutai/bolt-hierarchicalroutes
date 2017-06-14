@@ -30,7 +30,7 @@ class HierarchicalRoutesProvider implements ServiceProviderInterface
                 return new Service\HierarchicalRoutesService(
                     $app['hierarchicalroutes.config'],
                     $app['config'],
-                    $app['storage'],
+                    $app['storage.lazy'],
                     $app['query'],
                     $app['cache'],
                     $app['logger.system']
