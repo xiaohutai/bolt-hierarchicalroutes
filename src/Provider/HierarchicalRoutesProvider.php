@@ -27,10 +27,16 @@ class HierarchicalRoutesProvider implements ServiceProviderInterface
     {
         $app['hierarchicalroutes.service'] = $app->share(
             function (Application $app) {
+
+                $key = 'storage.lazy';
+                if (version_compare(BoltVersion::forComposer(), '3.3.0', '<')) {
+                    $key = 'storage';
+                }
+
                 return new Service\HierarchicalRoutesService(
                     $app['hierarchicalroutes.config'],
                     $app['config'],
-                    $app['storage.lazy'],
+                    $app[$key],
                     $app['query'],
                     $app['filesystem'],
                     $app['logger.system']
