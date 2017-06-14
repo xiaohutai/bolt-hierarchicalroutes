@@ -12,12 +12,22 @@ class Requirement
     /** @var HierarchicalRoutesService $service */
     private $service;
 
+    private $recordRoutes     = [];
+    private $listingRoutes    = [];
+    private $potentialParents = [];
+
     /**
      * @param HierarchicalRoutesService $service
      */
     public function __construct(HierarchicalRoutesService $service)
     {
         $this->service = $service;
+
+        // This call makes sure we got something to work with, when controllers
+        // are connected.
+        $this->recordRoutes     = $this->service->getRecordRoutes();
+        $this->listingRoutes    = $this->service->getListingRoutes();
+        $this->potentialParents = $this->service->getPotentialParents();
     }
 
     /**
@@ -25,7 +35,7 @@ class Requirement
      */
     public function anyRecordRouteConstraint()
     {
-        return $this->createConstraints($this->service->getRecordRoutes());
+        return $this->createConstraints($this->recordRoutes);
     }
 
     /**
@@ -33,7 +43,7 @@ class Requirement
      */
     public function anyListingRouteConstraint()
     {
-        return $this->createConstraints($this->service->getListingRoutes());
+        return $this->createConstraints($this->listingRoutes);
     }
 
     /**
@@ -41,7 +51,7 @@ class Requirement
      */
     public function anyPotentialParentConstraint()
     {
-        return $this->createConstraints($this->service->getPotentialParents());
+        return $this->createConstraints($this->potentialParents);
     }
 
     /**

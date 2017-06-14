@@ -13,12 +13,10 @@ use Symfony\Component\EventDispatcher\EventSubscriberInterface;
  */
 class StorageEventListener implements EventSubscriberInterface
 {
-    /** @var Application Bolt's Application object */
+    /** @var Application $app */
     private $app;
 
     /**
-     * Initiate the listener with Bolt Application instance and extension config.
-     *
      * @param Application $app
      */
     public function __construct(Application $app)
@@ -33,12 +31,7 @@ class StorageEventListener implements EventSubscriberInterface
      */
     public function onPostSave(StorageEvent $event)
     {
-        $config  = $this->app['hierarchicalroutes.config'];
-        $service = $this->app['hierarchicalroutes.service'];
-
-        if ($config->get('cache/enabled', true) && $config->get('settings/rebuild-on-save', true)) {
-            $service->build(false);
-        }
+        $service->rebuild();
     }
 
     /**
@@ -48,12 +41,7 @@ class StorageEventListener implements EventSubscriberInterface
      */
     public function onPostDelete(StorageEvent $event)
     {
-        $config  = $this->app['hierarchicalroutes.config'];
-        $service = $this->app['hierarchicalroutes.service'];
-
-        if ($config->get('cache/enabled', true) && $config->get('settings/rebuild-on-save', true)) {
-            $service->build(false);
-        }
+        $service->rebuild();
     }
 
     /**

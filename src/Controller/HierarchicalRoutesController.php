@@ -62,6 +62,7 @@ class HierarchicalRoutesController implements ControllerProviderInterface
      */
     public function recordExactMatch(Application $app, $slug)
     {
+        /** @var \Bolt\Legacy\Content $content */
         $content = $app['storage']->getContent(
             array_search($slug, $app['hierarchicalroutes.service']->getRecordRoutes()),
             ['hydrate' => false]

@@ -33,16 +33,6 @@ rules:
     #     parent: "entry/1"
 
 
-# Cache
-# -----
-# Enable cache in order to save the generated look-up table for performance.
-# The duration of the cache is in minutes.
-
-cache:
-    enabled: true
-    duration: 10
-
-
 # Settings
 # --------
 # overwrite-duplicates: Whether to overwrite when a duplicate entry has been
@@ -53,17 +43,10 @@ cache:
 #                       sense. There _should_ be no duplicates. This feature
 #                       might change in the future.
 #
-# rebuild-on-save: Rebuild hierarchy after saving or deleting a record. Only
-#                  used when caching is enabled. This is useful if rebuilding
-#                  the hierarchy costs some time. In that case, you might want
-#                  to clear the cache manually and have a longer than default
-#                  cache duration.
-#
 # override-slugs: Allow (slugifized) names in `menu.yml` override the slugs
 #                 defined in the records. Not implemented yet.
 #
 
 settings:
     overwrite-duplicates : true
-    rebuild-on-save      : true
     override-slugs       : false # -- todo: not implemented yet.

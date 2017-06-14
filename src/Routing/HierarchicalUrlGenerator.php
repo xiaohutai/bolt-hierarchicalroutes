@@ -21,7 +21,7 @@ class HierarchicalUrlGenerator implements UrlGeneratorInterface, ConfigurableReq
     protected $wrapped;
 
     /**
-     * UrlGeneratorFragmentWrapper constructor.
+     * HierarchicalUrlGenerator constructor.
      *
      * @param UrlGeneratorInterface $wrapped
      */
@@ -39,18 +39,24 @@ class HierarchicalUrlGenerator implements UrlGeneratorInterface, ConfigurableReq
     public function generate($name, $parameters = [], $referenceType = UrlGeneratorInterface::ABSOLUTE_PATH)
     {
         if ($name == 'contentlink') {
-            $singular_slug   = $parameters['contenttypeslug'];
-            $contenttypeslug = $this->singularToPluralContentTypeSlug($singular_slug);
-            $id              = $parameters['id'];
-            $slug            = $parameters['slug'];
+            $service         = $this->app['hierarchicalroutes.service'];
 
-            $recordRoutes = $this->app['hierarchicalroutes.service']->getRecordRoutes();
-            if (isset($recordRoutes["$contenttypeslug/$id"])) {
-                return '/' . $recordRoutes["$contenttypeslug/$id"];
+            /**
+             * Since Bolt 3.3. Bolt now strips away all the parameters that are not needed for the
+             * generation of routes. So we have `contenttypeslug` and `slug`, and we need to get the
+             * `id` separately.
+             */
+            $singular_slug   = $parameters['contenttypeslug'];
+            $slug            = $parameters['slug'];
+            $contenttypeslug = $service->singularToPluralContentTypeSlug($singular_slug);
+            $recordRoutes    = $service->getRecordRoutes();
+
+            if (isset($recordRoutes["$contenttypeslug/$slug"])) {
+                return '/' . $recordRoutes["$contenttypeslug/$slug"];
             }
 
             // For `contenttype` rules
-            $parent = $this->app['hierarchicalroutes.service']->getParentLinkForContentType($contenttypeslug);
+            $parent = $service->getParentLinkForContentType($contenttypeslug);
 
             if ($parent) {
                 return "/$parent/$slug";
@@ -58,20 +64,6 @@ class HierarchicalUrlGenerator implements UrlGeneratorInterface, ConfigurableReq
         }
 
         return $this->wrapped->generate($name, $parameters, $referenceType);
-    }
-
-    /**
-     * @param string $singular_slug
-     */
-    private function singularToPluralContentTypeSlug($singular_slug)
-    {
-        $contenttypes = $this->app['config']->get('contenttypes');
-        foreach ($contenttypes as $key => $type) {
-            if ($type['singular_slug'] === $singular_slug) {
-                return isset($type['slug']) ? $type['slug'] : $key;
-            }
-        }
-        return null;
     }
 
     /**

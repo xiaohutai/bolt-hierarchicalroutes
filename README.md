@@ -1,7 +1,5 @@
 # Hierarchical Routes
 
-> Heh... the term "Hierarchical Routes" actually makes no sense.
-
 A simple way to get hierarchical content to work by using `menu.yml`.
 No assumptions or crazy features. This extensions allows you to do a few things:
 
@@ -27,19 +25,17 @@ existing items.
 - `rules`: apply some sets of content under a (parent) node
   - `type: contenttype`: put all items from a specific contenttype under a node
   - `type: query`: use a `setcontent`-like query to put a whole set under a node
-- `cache`: enable caching and set the cache duration in minutes
 - `settings`: other settings
   - `overwrite-duplicates`: allow duplicates to be overwritten, or not
-  - `rebuild-on-save`: allow cache to be rebuilt on record save/delete
 
 
 ## Cache
 
-By default, caching is enabled. By default (under `rebuild-on-save`), the
-internal hierarchy will be rebuilt on every record's save and delete event.
-However, this is not done after saving config files (`menu.yml` and
-`hierarchicalroutes.twokings.yml`), so clear the cache when editing these, or
-wait until the cache expires.
+Once a menu is built, it will be stored in the configuration folder, by default
+in `app/config/extensions/hierarchicalroutes/`. This is invalidated and rebuilt
+on every save of a record. However, this is not automatically done after saving
+config files (`menu.yml` and `hierarchicalroutes.twokings.yml`) as this might
+require an additional refresh.
 
 
 ## Twig functions
