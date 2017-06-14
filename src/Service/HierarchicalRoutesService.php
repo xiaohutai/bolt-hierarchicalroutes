@@ -255,7 +255,7 @@ class HierarchicalRoutesService
     {
         $content = false;
         if (isset($item['path']) && $item['path'] != 'homepage') {
-            // /** @var \Bolt\Legacy\Content $content */
+            /** @var \Bolt\Legacy\Content $content */
             $content = $this->storage->getContent($item['path'], ['hydrate' => false]);
         }
 
