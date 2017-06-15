@@ -34,7 +34,13 @@
 
 {% block page_main %}
 
-    <div class="hierarchicalroutes-tree">
+    <div>
+        <p>
+            <a class="btn btn-primary" href="{{ path('hierarchicalroutes.tree', {'rebuild': true}) }}">Rebuild</a>
+        </p>
+    </div>
+
+    <div class="hierarchicalroutes-tree well">
         <ol>
         {% for node, children in tree %}
             {{ _self.makeItem(node, children) }}

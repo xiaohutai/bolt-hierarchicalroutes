@@ -61,7 +61,8 @@ class HierarchicalRoutesExtension extends SimpleExtension
             $prefix = '/extend/';
         }
 
-        $collection->match($prefix . 'hierarchical-routes', [$this, 'tree']);
+        $collection->match($prefix . 'hierarchical-routes', [$this, 'tree'])
+            ->bind('hierarchicalroutes.tree');
     }
 
     /**
@@ -94,9 +95,17 @@ class HierarchicalRoutesExtension extends SimpleExtension
     /**
      *
      */
-    public function tree()
+    public function tree(Request $request)
     {
         $app = $this->getContainer();
+
+        if ($request->query->get('rebuild', false)) {
+            $app['hierarchicalroutes.service']->rebuild();
+
+            return $app->redirect(
+                $app['url_generator']->generate('hierarchicalroutes.tree')
+            );
+        }
 
         $assets = [
             (new Stylesheet('extension.css')),
