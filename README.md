@@ -92,3 +92,6 @@ in this case.
 - https://github.com/bacbos/bolt-menu-editor
 - https://github.com/europeana/Europeana-Professional/blob/master/extensions/local/europeana/structure-tree/Extension.php
 - https://github.com/AnimalDesign/bolt-translate/blob/master/src/Routing/LocalizedUrlGenerator.php
+
+This package makes use of:
+- https://github.com/pbergman/tree-printer for generating trees on the console
