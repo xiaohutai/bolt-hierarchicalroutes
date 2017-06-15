@@ -1,3 +1,7 @@
 .hierarchicalroutes-tree ol {
     list-style: none;
 }
+
+.hierarchicalroutes-tree li {
+    line-height: 2em;
+}

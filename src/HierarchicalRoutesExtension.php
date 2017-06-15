@@ -114,6 +114,7 @@ class HierarchicalRoutesExtension extends SimpleExtension
 
         $assets = [
             (new Stylesheet('extension.css')),
+            (new JavaScript('extension.js')),
         ];
 
         foreach ($assets as $asset) {

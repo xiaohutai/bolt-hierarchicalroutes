@@ -3,13 +3,22 @@
 {% macro makeItem(item, children) %}
 
     {% setcontent record = item %}
+    {% set editlink = record.editlink() %}
+
     {% set title %}
-        <code>[{{ record.contenttype.slug }}/{{ record.id }}]</code> <a href="{{ record.link }}">{{ record.title }}</a>
+        <code>[{{ record.contenttype.slug }}/{{ record.id }}]</code>
+        {# <code>[{{ record.status }}]</code> #}
+        <a href="{{ record.link() }}">{{ record.title }}</a>
+        {# <a class="btn btn-tertiary btn-xs" href="{{ record.link() }}">View</a> #}
+
+        {% if editlink %}
+            <a class="btn btn-tertiary btn-xs" href="{{ editlink }}">Edit</a>
+        {% endif %}
     {% endset %}
 
     <li>
         {% if children is not empty %}
-            <details>
+            <details open>
                 <summary>
                     {{ title }}
                 </summary>
@@ -36,7 +45,16 @@
 
     <div>
         <p>
-            <a class="btn btn-primary" href="{{ path('hierarchicalroutes.tree', {'rebuild': true}) }}">Rebuild</a>
+            <a class="btn btn-primary" href="{{ path('hierarchicalroutes.tree', {'rebuild': true}) }}">
+                <i class="fa fa-fw fa-sitemap"></i> Rebuild
+            </a>
+            |
+            <a class="btn btn-secondary expand-all" href="#">
+                <i class="fa fa-fw fa-caret-down"></i> Expand all
+            </a>
+            <a class="btn btn-secondary collapse-all" href="#">
+                <i class="fa fa-fw fa-caret-up"></i> Collapse all
+            </a>
         </p>
     </div>
 
