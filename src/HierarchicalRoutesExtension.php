@@ -14,6 +14,7 @@ use Bolt\Extension\TwoKings\HierarchicalRoutes\Listener\KernelEventListener;
 use Bolt\Extension\TwoKings\HierarchicalRoutes\Listener\StorageEventListener;
 use Bolt\Menu\MenuEntry;
 use Bolt\Version as BoltVersion;
+use Pimple as Container;
 use Silex\Application;
 use Silex\ControllerCollection;
 use Symfony\Component\EventDispatcher\EventDispatcherInterface;
@@ -137,6 +138,17 @@ class HierarchicalRoutesExtension extends SimpleExtension
         return [
             $this,
             new Provider\HierarchicalRoutesProvider(),
+        ];
+    }
+
+    /**
+     * {@inheritdoc}
+     */
+    public function registerNutCommands(Container $container)
+    {
+        return [
+            new Nut\BuildHierarchyCommand(),
+            new Nut\ViewHierarchyCommand(),
         ];
     }
 }
