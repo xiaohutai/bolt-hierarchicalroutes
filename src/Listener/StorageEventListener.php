@@ -16,12 +16,16 @@ class StorageEventListener implements EventSubscriberInterface
     /** @var Application $app */
     private $app;
 
+    /** @var HierarchicalRoutesService $service */
+    private $service;
+
     /**
      * @param Application $app
      */
     public function __construct(Application $app)
     {
         $this->app = $app;
+        $this->service = $app['hierarchicalroutes.service'];
     }
 
     /**
@@ -31,7 +35,7 @@ class StorageEventListener implements EventSubscriberInterface
      */
     public function onPostSave(StorageEvent $event)
     {
-        $service->rebuild();
+        $this->service->rebuild();
     }
 
     /**
@@ -41,7 +45,7 @@ class StorageEventListener implements EventSubscriberInterface
      */
     public function onPostDelete(StorageEvent $event)
     {
-        $service->rebuild();
+        $this->service->rebuild();
     }
 
     /**
