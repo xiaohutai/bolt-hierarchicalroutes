@@ -147,8 +147,8 @@ class HierarchicalRoutesExtension extends SimpleExtension
     public function registerNutCommands(Container $container)
     {
         return [
-            new Nut\BuildHierarchyCommand(),
-            new Nut\ViewHierarchyCommand(),
+            new Nut\BuildHierarchyCommand($container),
+            new Nut\ViewHierarchyCommand($container),
         ];
     }
 }
