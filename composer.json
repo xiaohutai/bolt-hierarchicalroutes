@@ -51,5 +51,16 @@
     },
     "suggest": {
         "bacboslab/menueditor": "A visual menu editor for Bolt CMS"
+    },
+    "repositories": {
+        "packagist": false,
+        "treehelper": {
+            "type": "vcs",
+            "url": "git@github.com:pbergman/tree-printer.git"
+        },
+        "bolt": {
+            "type": "composer",
+            "url": "https://extensions.bolt.cm/satis/"
+        }
     }
 }
