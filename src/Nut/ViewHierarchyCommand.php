@@ -68,19 +68,44 @@ class ViewHierarchyCommand extends BaseCommand
     {
         $newItem = [];
 
-        $record = $this->app['storage']->getContent($node);
+        // Not sure why in `HierarchicalRoutesService`, I don't need to do: ['status' => '!'].
+        $record = $this->app['storage']->getContent($node, ['status' => '!']);
         $routes = $this->app['hierarchicalroutes.service']->getRecordRoutes();
         $link   = isset($routes[$node]) ? $routes[$node] : '';
 
+        $title = '';
+        if ($record === false) {
+            // I believe this can not happen, but just in case
+            $title = "<error>Record not found!</error>";
+        } elseif (is_array($record)) {
+            $title = "<fg=yellow>[ ... ]</>";
+        }
+
+        else {
+            $title = $record->getTitle();
+            $title = "<fg=yellow>$title</>";
+            switch ( $record['status'] ) {
+                case 'published':
+                    $title = "[<fg=green;options=bold>✔</>] $title";
+                    break;
+                case 'draft':
+                case 'timed':
+                    $title = "[<fg=blue;options=bold>~</>] $title";
+                    break;
+                case 'held':
+                    $title = "[<fg=red;options=bold>✘</>] $title";
+                    break;
+            }
+        }
+
         $newKey = sprintf(
-            "<info>[%s]</info> <comment>%s</comment> <fg=red>/%s</>",
+            "[<fg=green>%s</>] %s <fg=red>/%s</>",
             $node,
-            $record->getTitle(),
+            $title,
             $link
         );
 
         // Note: $record->link() does not work
-
 
         $arr = [];
         foreach ($children as $k => $v) {
