@@ -102,6 +102,11 @@ class HierarchicalRoutesExtension extends SimpleExtension
         if ($request->query->get('rebuild', false)) {
             $app['hierarchicalroutes.service']->rebuild();
 
+            // FlashLoggerInterface
+            // todo: Translatable string in general
+
+            $app['logger.flash']->success('Ok!');
+
             return $app->redirect(
                 $app['url_generator']->generate('hierarchicalroutes.tree')
             );
