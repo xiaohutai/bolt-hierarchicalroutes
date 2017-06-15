@@ -125,8 +125,6 @@ class HierarchicalRoutesExtension extends SimpleExtension
             $app['asset.queue.file']->add($asset);
         }
 
-        $app = $this->getContainer();
-
         $data = [
             'title' => "Hierarchical Routes Tree",
             'tree'  => $app['hierarchicalroutes.service']->getTree(),
