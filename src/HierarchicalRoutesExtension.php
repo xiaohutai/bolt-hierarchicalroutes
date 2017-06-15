@@ -96,22 +96,18 @@ class HierarchicalRoutesExtension extends SimpleExtension
     public function tree()
     {
         $app = $this->getContainer();
-        /*
-        Working on http://code.stephenmorley.org/javascript/collapsible-lists/
 
         $assets = [
             (new Stylesheet('extension.css')),
-            (new JavaScript('CollapsibleLists.js')),
-            (new JavaScript('extension.js')),
         ];
 
         foreach ($assets as $asset) {
             $asset->setZone(Zone::BACKEND);
+
             $file = $this->getWebDirectory()->getFile($asset->getPath());
             $asset->setPackageName('extensions')->setPath($file->getPath());
             $app['asset.queue.file']->add($asset);
         }
-        //*/
 
         $app = $this->getContainer();
 
