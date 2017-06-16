@@ -13,6 +13,14 @@ use Symfony\Component\Console\Output\OutputInterface;
  */
 class ViewHierarchyCommand extends BaseCommand
 {
+    /** @var string[] $colors */
+    private $colors = [
+        'published' => 'green',
+        'timed'     => 'yellow',
+        'draft'     => 'blue',
+        'held'      => 'red',
+    ];
+
     /**
      *
      */
@@ -44,6 +52,14 @@ class ViewHierarchyCommand extends BaseCommand
         $treeHelper = new TreeHelper($output);
         $treeHelper->addArray($tree);
         $treeHelper->printTree($output);
+
+        if ($input->getOption('full')) {
+            foreach ($this->colors as $status => $color) {
+                $output->writeln(
+                    sprintf("[<fg=%s;options=bold>●</>] %s", $color, $status)
+                );
+            }
+        }
     }
 
     /**
@@ -73,37 +89,33 @@ class ViewHierarchyCommand extends BaseCommand
         $routes = $this->app['hierarchicalroutes.service']->getRecordRoutes();
         $link   = isset($routes[$node]) ? $routes[$node] : '';
 
-        $title = '';
+        $newKey = '';
         if ($record === false) {
             // I believe this can not happen, but just in case
-            $title = "<error>Record not found!</error>";
-        } elseif (is_array($record)) {
-            $title = "<fg=yellow>[ ... ]</>";
+            $newKey = sprintf(
+                "[<fg=red>%s</>] [<fg=red;options=bold>●</>] <error>Record not found!</error> <fg=red>%s</>",
+                $node,
+                $link
+            );
         }
-
+        elseif (is_array($record)) {
+            $newKey = sprintf(
+                "[%s] [<options=bold>●</>] [ ... ] %s",
+                $node,
+                $link
+            );
+        }
         else {
-            $title = $record->getTitle();
-            $title = "<fg=yellow>$title</>";
-            switch ( $record['status'] ) {
-                case 'published':
-                    $title = "[<fg=green;options=bold>✔</>] $title";
-                    break;
-                case 'draft':
-                case 'timed':
-                    $title = "[<fg=blue;options=bold>~</>] $title";
-                    break;
-                case 'held':
-                    $title = "[<fg=red;options=bold>✘</>] $title";
-                    break;
-            }
+            $color = $this->colors[ $record['status'] ];
+            $newKey = sprintf(
+                '[<fg=%s>%s</>] [<fg=%s;options=bold>●</>] %s <fg=red>%s</>',
+                $color,
+                $node,
+                $color,
+                $record->getTitle(),
+                $link
+            );
         }
-
-        $newKey = sprintf(
-            "[<fg=green>%s</>] %s <fg=red>/%s</>",
-            $node,
-            $title,
-            $link
-        );
 
         // Note: $record->link() does not work
 

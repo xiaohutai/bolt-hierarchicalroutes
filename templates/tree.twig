@@ -7,7 +7,7 @@
 
     {% set title %}
         <code>[{{ record.contenttype.slug }}/{{ record.id }}]</code>
-        {# <code>[{{ record.status }}]</code> #}
+        <i class="fa fa-fw fa-circle status-{{ record.status }}"></i>
         <a href="{{ record.link() }}">{{ record.title }}</a>
         {# <a class="btn btn-tertiary btn-xs" href="{{ record.link() }}">View</a> #}
 

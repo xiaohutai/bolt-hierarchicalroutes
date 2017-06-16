@@ -138,6 +138,10 @@ class HierarchicalRoutesService
             return;
         }
 
+        // Always reset all properties when rebuilding.
+        $this->reset();
+
+
         $menu = $this->config->get('menu');
         if (is_array($menu)) {
             foreach ($menu as $menuName) {
@@ -161,6 +165,17 @@ class HierarchicalRoutesService
     public function rebuild()
     {
         $this->build(false);
+    }
+
+    /**
+     * Resets all the data currently stored, used when rebuilding the hierarchy
+     * structure.
+     */
+    private function reset()
+    {
+        foreach ($this->properties as $prop) {
+            $this->$prop = [];
+        }
     }
 
     /**
@@ -206,10 +221,9 @@ class HierarchicalRoutesService
             }
 
             if ($this->$property === false) {
-                // Reset all properties and import
-                foreach ($this->properties as $prop) {
-                    $this->$prop = [];
-                }
+                // Reset all properties and import if any of the properties are
+                // failed to be set properly.
+                $this->reset();
                 return false;
             }
         }
