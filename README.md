@@ -33,12 +33,13 @@ existing items.
 
 Once a menu is built, it will be stored in the configuration folder, by default
 in `app/config/extensions/hierarchicalroutes/`. This is invalidated and rebuilt
-on every save of a record. However, this is not automatically done after saving
-config files (`menu.yml` and `hierarchicalroutes.twokings.yml`) as this might
-require an additional refresh.
+on every save of a record, or after updating one of the main config files
+(`menu.yml` and `hierarchicalroutes.twokings.yml`).
 
 
 ## Twig functions
+
+Note: These functions do not work for `contenttype` rules or `contentlisting` pages.
 
 - `getParent(record)` - Returns the parent of the current record, otherwise `null`.
 - `getParents(record)` - Returns an array of all the parents of the current record. This is useful for breadcrumbs: iterate over `getParents(record)|reverse`.
@@ -47,6 +48,13 @@ require an additional refresh.
 
 
 ## Dev Notes
+
+### Routing
+
+This extensions works only if the default route `contentlink` would be used for
+records. This extension will then attempt to re-write it, if there are any
+parents for that record.
+
 
 ### On Handling duplicates
 
