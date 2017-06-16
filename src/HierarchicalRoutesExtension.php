@@ -20,6 +20,7 @@ use Silex\ControllerCollection;
 use Symfony\Component\EventDispatcher\EventDispatcherInterface;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
+use Symfony\Component\Security\Core\Exception\AccessDeniedException;
 
 /**
  * HierarchicalRoutesExtension class
@@ -28,6 +29,9 @@ use Symfony\Component\HttpFoundation\Response;
  */
 class HierarchicalRoutesExtension extends SimpleExtension
 {
+    /** @var string $permission The permission a user needs for interaction with  the back-end */
+    private $permission = 'settings';
+
     /**
      * {@inheritdoc}
      */
@@ -73,7 +77,7 @@ class HierarchicalRoutesExtension extends SimpleExtension
         $menuEntry = (new MenuEntry('my-custom-backend-page', 'hierarchical-routes'))
             ->setLabel('Hierarchial Routes')
             ->setIcon('fa:sitemap')
-            ->setPermission('settings')
+            ->setPermission($this->permission)
         ;
 
         return [$menuEntry];
@@ -98,6 +102,10 @@ class HierarchicalRoutesExtension extends SimpleExtension
     public function tree(Request $request)
     {
         $app = $this->getContainer();
+
+        if (!$app['users']->isAllowed($this->permission)) {
+            throw new AccessDeniedException('Logged in user does not have the correct rights to use this route.');
+        }
 
         if ($request->query->get('rebuild', false)) {
             $app['hierarchicalroutes.service']->rebuild();
