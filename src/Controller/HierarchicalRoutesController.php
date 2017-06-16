@@ -62,17 +62,24 @@ class HierarchicalRoutesController implements ControllerProviderInterface
      */
     public function recordExactMatch(Application $app, $slug)
     {
+        $key = array_search($slug, $app['hierarchicalroutes.service']->getRecordRoutes());
+
         /** @var \Bolt\Legacy\Content $content */
         $content = $app['storage']->getContent(
-            array_search($slug, $app['hierarchicalroutes.service']->getRecordRoutes()),
+            $key,
             ['hydrate' => false]
         );
 
-        return $app['controller.frontend']->record(
-            $app['request'],
-            $content->contenttype['slug'],
-            $content->values['slug']
-        );
+        if ($content) {
+            return $app['controller.frontend']->record(
+                $app['request'],
+                $content->contenttype['slug'],
+                $content->values['slug']
+            );
+        }
+        else {
+            return $app->abort(Response::HTTP_NOT_FOUND, "Page $slug not found.");
+        }
     }
 
     /**
