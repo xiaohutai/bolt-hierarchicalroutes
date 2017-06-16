@@ -27,9 +27,12 @@ class BuildHierarchyCommand extends BaseCommand
      */
     protected function execute(InputInterface $input, OutputInterface $output)
     {
+        $start = microtime(true);
+
         $this->app['hierarchicalroutes.service']->rebuild();
 
-        $text = 'Ok!';
+        $time = microtime(true) - $start;
+        $text = sprintf('Build successfully executed in %s seconds.', number_format($time, 2));
         $output->writeln($text);
     }
 

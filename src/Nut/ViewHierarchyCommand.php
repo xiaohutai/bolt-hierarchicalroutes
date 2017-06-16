@@ -43,6 +43,7 @@ class ViewHierarchyCommand extends BaseCommand
      */
     protected function execute(InputInterface $input, OutputInterface $output)
     {
+        $start = microtime(true);
         $tree = $this->app['hierarchicalroutes.service']->getTree();
 
         if ($input->getOption('full')) {
@@ -59,7 +60,12 @@ class ViewHierarchyCommand extends BaseCommand
                     sprintf("[<fg=%s;options=bold>●</>] %s", $color, $status)
                 );
             }
+            $output->writeln('');
         }
+
+        $time = microtime(true) - $start;
+        $text = sprintf('Took %s seconds.', number_format($time, 2));
+        $output->writeln($text);
     }
 
     /**
