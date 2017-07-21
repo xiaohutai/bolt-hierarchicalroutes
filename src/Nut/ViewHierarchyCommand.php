@@ -22,7 +22,7 @@ class ViewHierarchyCommand extends BaseCommand
     ];
 
     /**
-     *
+     * {@inheritdoc}
      */
     protected function configure()
     {
@@ -39,7 +39,7 @@ class ViewHierarchyCommand extends BaseCommand
     }
 
     /**
-     *
+     * {@inheritdoc}
      */
     protected function execute(InputInterface $input, OutputInterface $output)
     {

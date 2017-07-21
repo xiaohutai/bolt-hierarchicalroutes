@@ -69,6 +69,15 @@ Note: These functions do not work for `contenttype` rules or `contentlisting` pa
 - `getSiblings(record)` - Returns an array of all the siblings of the current record.
 
 
+## Nut Commands
+
+Several Nut commands are added for CLI convenience:
+
+- `app/nut hierarchy:build` - Build the structure tree
+- `app/nut hierarchy:view` - View the structure tree (minimal)
+- `app/nut hierarchy:view --full` - View the structure tree with titles and links
+
+
 ## Dev Notes
 
 ### Routing
