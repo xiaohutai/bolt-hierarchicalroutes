@@ -44,9 +44,9 @@ rules:
 #                       might change in the future.
 #
 # override-slugs: Allow (slugifized) names in `menu.yml` override the slugs
-#                 defined in the records. Not implemented yet.
+#                 defined in the records.
 #
 
 settings:
     overwrite-duplicates : true
-    override-slugs       : false # -- todo: not implemented yet.
+    override-slugs       : false

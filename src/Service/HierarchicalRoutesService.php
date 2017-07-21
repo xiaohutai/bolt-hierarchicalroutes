@@ -276,9 +276,16 @@ class HierarchicalRoutesService
         // Only items with records can be in a hierarchy, otherwise it doesn't make much sense
         if ($content && !is_array($content)) {
 
-            $id          = $content->id;
-            $slug        = $content->values['slug'];
-            $contenttype = $content->contenttype['slug'];
+            $id           = $content->id;
+            $slug         = $content->values['slug'];
+            $originalSlug = $content->values['slug'];
+            $contenttype  = $content->contenttype['slug'];
+
+            // 'override-slugs'
+            $overrideSlugs = $this->config->get('settings/override-slugs', false);
+            if ($overrideSlugs && isset($item['override']) && !empty($item['override'])) {
+                $slug = $item['override'];
+            }
 
             // 'overwrite-duplicates'
             if (!isset($this->slugs["$contenttype/$id"]) || $this->config->get('settings/overwrite-duplicates', true)) {
@@ -293,7 +300,7 @@ class HierarchicalRoutesService
                 $this->parents["$contenttype/$id"] = $parent;
                 $this->slugs["$contenttype/$id"]   = $slug;
                 $this->recordRoutes["$contenttype/$id"]  = $parent ? $this->recordRoutes[$parent] . '/' . $slug : $slug;
-                $this->recordRoutes["$contenttype/$slug"] = $this->recordRoutes["$contenttype/$id"];
+                $this->recordRoutes["$contenttype/$originalSlug"] = $this->recordRoutes["$contenttype/$id"];
 
                 if ($parent) {
                     $this->children[$parent][] = "$contenttype/$id"; // but also add links and other items ???

@@ -27,6 +27,7 @@ existing items.
   - `type: query`: use a `setcontent`-like query to put a whole set under a node
 - `settings`: other settings
   - `overwrite-duplicates`: allow duplicates to be overwritten, or not
+  - `override-slugs`: allow slugs to be overridden via `menu.yml`
 
 
 ## Cache
@@ -35,6 +36,27 @@ Once a menu is built, it will be stored in the configuration folder, by default
 in `app/config/extensions/hierarchicalroutes/`. This is invalidated and rebuilt
 on every save of a record, or after updating one of the main config files
 (`menu.yml` and `hierarchicalroutes.twokings.yml`).
+
+Make sure that this folder is writeable.
+
+
+## Override Slugs
+
+If `override-slugs` is enabled, then slugs can be overridden in `menu.yml`. Just
+add an additional key named `override` with the desired slug as the value.
+
+```
+    - label: Entry 1
+      path: entry/1
+      override: my-custom-slug
+```
+
+This allows you to re-use duplicate slugs as long as they are under different
+parents, like so:
+
+- `/project/foo/case-study`
+- `/project/bar/case-study`
+- `/project/baz/case-study`
 
 
 ## Twig functions
