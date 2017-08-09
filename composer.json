@@ -36,7 +36,7 @@
     },
     "autoload-dev": {
         "psr-4": {
-            "Bolt\\Extension\\TwoKings\\HierarchicalRouets\\Tests\\": "tests",
+            "Bolt\\Extension\\TwoKings\\HierarchicalRoutes\\Tests\\": "tests",
             "Bolt\\Tests\\": "vendor/bolt/bolt/tests/phpunit/unit/"
         }
     },
