@@ -30,7 +30,7 @@ use Symfony\Component\Security\Core\Exception\AccessDeniedException;
 class HierarchicalRoutesExtension extends SimpleExtension
 {
     /** @var string $permission The permission a user needs for interaction with  the back-end */
-    private $permission = 'settings';
+    private $permission = 'extensions';
 
     /**
      * {@inheritdoc}
