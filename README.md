@@ -37,7 +37,12 @@ in `app/config/extensions/hierarchicalroutes/`. This is invalidated and rebuilt
 on every save of a record, or after updating one of the main config files
 (`menu.yml` and `hierarchicalroutes.twokings.yml`).
 
-Make sure that this folder is writeable.
+Make sure that this folder is writeable and ignored in your project's
+`.gitignore`:
+
+```
+app/config/extensions/hierarchicalroutes/
+```
 
 
 ## Override Slugs
