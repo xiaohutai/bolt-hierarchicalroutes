@@ -50,6 +50,9 @@ class HierarchicalRoutesService
     /** @var bool Specifies whether the structures are already built */
     private $done = false;
 
+    /** @var bool An internal flag to prevent multiple `rebuild` calls within a single request */
+    private $rebuilt = false;
+
     /** @var string[] $parents A mapping from items to their parent */
     private $parents = [];
 
@@ -164,7 +167,10 @@ class HierarchicalRoutesService
      */
     public function rebuild()
     {
-        $this->build(false);
+        if (! $this->rebuilt) {
+            $this->build(false);
+            $this->rebuilt = true;
+        }
     }
 
     /**
