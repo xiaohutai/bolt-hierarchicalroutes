@@ -298,7 +298,7 @@ class HierarchicalRoutesService
 
                 $oldParent = isset($this->parents["$contenttype/$id"]) ? $this->parents["$contenttype/$id"] : null;
                 if ($oldParent) {
-                    $this->children[$oldParent] = array_filter($this->children[$oldParent], function($v, $k) {
+                    $this->children[$oldParent] = array_filter($this->children[$oldParent], function($v, $k) use ($contenttype, $id) {
                         return $v !== "$contenttype/$id";
                     }, ARRAY_FILTER_USE_BOTH);
                 }
