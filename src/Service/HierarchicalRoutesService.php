@@ -397,8 +397,10 @@ class HierarchicalRoutesService
                         $slug = $item->getSlug();
 
                         // 'overwrite-duplicates'
-                        // Case I: Overwrite duplicates
-                        if (!isset($this->slugs["$contenttypeslug/$id"]) || $this->config->get('settings/overwrite-duplicates', true)) {
+                        //   I. If the record lookup did not exist yet, always add it.
+                        //  II. If `overwrite-duplicates` is set to `true`, always overwrite it.
+                        // III. If `overwrite-duplicates` is set to `false`, skip it only if it does not exist
+                        if (! isset($this->slugs["$contenttypeslug/$id"]) || $this->config->get('settings/overwrite-duplicates', true)) {
                             $oldParent = isset($this->parents["$contenttypeslug/$id"]) ? $this->parents["$contenttypeslug/$id"] : null;
                             if ($oldParent) {
                                 $this->children[$oldParent] = array_filter($this->children[$oldParent], function($v, $k) use ($contenttypeslug, $id) {
@@ -415,18 +417,6 @@ class HierarchicalRoutesService
                             } else {
                                 $this->recordRoutes["$contenttypeslug/$id"]  = $this->recordRoutes[$parent] . '/' . $slug;
                                 $this->recordRoutes["$contenttypeslug/$slug"] = $this->recordRoutes["$contenttypeslug/$id"];
-                            }
-                        }
-                        // Case II: Do *NOT* overwrite duplicates
-                        else {
-                            // Only add entry if it does not already exist.
-                            if (! isset($this->recordRoutes["$contenttypeslug/$id"])) {
-                                if (is_array($content)) {
-                                    $this->listingRoutes["$contenttypeslug/$id"]  = $this->recordRoutes[$parent] . '/' . $slug;
-                                } else {
-                                    $this->recordRoutes["$contenttypeslug/$id"]  = $this->recordRoutes[$parent] . '/' . $slug;
-                                    $this->recordRoutes["$contenttypeslug/$slug"] = $this->recordRoutes["$contenttypeslug/$id"];
-                                }
                             }
                         }
                     }
