@@ -396,10 +396,10 @@ class HierarchicalRoutesService
                         $id = $item->getId();
                         $slug = $item->getSlug();
 
-                        // 'overwrite-duplicates'
-                        //   I. If the record lookup did not exist yet, always add it.
-                        //  II. If `overwrite-duplicates` is set to `true`, always overwrite it.
-                        // III. If `overwrite-duplicates` is set to `false`, skip it only if it does not exist
+                        // overwrite-duplicates
+                        // (1). If the record lookup did not exist yet, always add it.
+                        // (2). If `overwrite-duplicates` is set to `true`, always overwrite it.
+                        // (3). If `overwrite-duplicates` is set to `false`, skip it only if it already exists.
                         if (! isset($this->slugs["$contenttypeslug/$id"]) || $this->config->get('settings/overwrite-duplicates', true)) {
                             $oldParent = isset($this->parents["$contenttypeslug/$id"]) ? $this->parents["$contenttypeslug/$id"] : null;
                             if ($oldParent) {
