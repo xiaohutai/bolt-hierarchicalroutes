@@ -37,12 +37,16 @@ class HierarchicalRoutesController implements ControllerProviderInterface
         $ctr
             ->match("/{slug}", [$this, 'recordExactMatch'])
             ->assert('slug', $requirement->anyRecordRouteConstraint())
+            ->before('controller.frontend:before')
+            ->after('controller.frontend:after')
             ->bind('hierarchicalroutes.record.exact')
         ;
 
         $ctr
             ->match("/{slug}", [$this, 'listingExactMatch'])
             ->assert('slug', $requirement->anyListingRouteConstraint())
+            ->before('controller.frontend:before')
+            ->after('controller.frontend:after')
             ->bind('hierarchicalroutes.listing.exact')
         ;
 
@@ -51,6 +55,8 @@ class HierarchicalRoutesController implements ControllerProviderInterface
             ->match("/{parents}/{slug}", [$this, 'recordPotentialMatch'])
             ->assert('parents', $requirement->anyPotentialParentConstraint())
             ->assert('slug', '[a-zA-Z0-9_\-]+') // this may result in a 404
+            ->before('controller.frontend:before')
+            ->after('controller.frontend:after')
             ->bind('hierarchicalroutes.record')
         ;
 
