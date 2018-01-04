@@ -52,14 +52,23 @@ class HierarchicalUrlGenerator implements UrlGeneratorInterface, ConfigurableReq
             $recordRoutes    = $service->getRecordRoutes();
 
             if (isset($recordRoutes["$contenttypeslug/$slug"])) {
-                return '/' . $recordRoutes["$contenttypeslug/$slug"];
+                $name = 'hierarchicalroutes.record.exact';
+                $parameters = [
+                    'slug' => $recordRoutes["$contenttypeslug/$slug"],
+                ];
+                return $this->wrapped->generate($name, $parameters, $referenceType);
             }
 
             // For `contenttype` rules
             $parent = $service->getParentLinkForContentType($contenttypeslug);
 
             if ($parent) {
-                return "/$parent/$slug";
+                $name = 'hierarchicalroutes.record';
+                $parameters = [
+                    'parents' => $parent,
+                    'slug'    => $slug,
+                ];
+                return $this->wrapped->generate($name, $parameters, $referenceType);
             }
         }
 
