@@ -3,35 +3,37 @@
 {% macro makeItem(item, children) %}
 
     {% setcontent record = item %}
-    {% set editlink = record.editlink() %}
 
-    {% set title %}
-        <code>[{{ record.contenttype.slug }}/{{ record.id }}]</code>
-        <i class="fa fa-fw fa-circle status-{{ record.status }}"></i>
-        <a href="{{ record.link() }}">{{ record.title }}</a>
-        {# <a class="btn btn-tertiary btn-xs" href="{{ record.link() }}">View</a> #}
+    {% if record is not iterable %}
+        {% set editlink = record.editlink() %}
+        {% set title %}
+            <code>[{{ record.contenttype.slug }}/{{ record.id }}]</code>
+            <i class="fa fa-fw fa-circle status-{{ record.status }}"></i>
+            <a href="{{ record.link() }}">{{ record.title }}</a>
+            {# <a class="btn btn-tertiary btn-xs" href="{{ record.link() }}">View</a> #}
 
-        {% if editlink %}
-            <a class="btn btn-tertiary btn-xs" href="{{ editlink }}">Edit</a>
-        {% endif %}
-    {% endset %}
+            {% if editlink %}
+                <a class="btn btn-tertiary btn-xs" href="{{ editlink }}">Edit</a>
+            {% endif %}
+        {% endset %}
 
-    <li>
-        {% if children is not empty %}
-            <details open>
-                <summary>
-                    {{ title }}
-                </summary>
-                <ol>
-                    {% for i, j in children %}
-                    {{ _self.makeItem(i, j) }}
-                    {% endfor %}
-                </ol>
-            </details>
-        {% else %}
-            {{ title }}
-        {% endif %}
-    </li>
+        <li>
+            {% if children is not empty %}
+                <details open>
+                    <summary>
+                        {{ title }}
+                    </summary>
+                    <ol>
+                        {% for i, j in children %}
+                        {{ _self.makeItem(i, j) }}
+                        {% endfor %}
+                    </ol>
+                </details>
+            {% else %}
+                {{ title }}
+            {% endif %}
+        </li>
+    {% endif %}
 
 {% endmacro %}
 
