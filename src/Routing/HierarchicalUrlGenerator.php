@@ -38,8 +38,11 @@ class HierarchicalUrlGenerator implements UrlGeneratorInterface, ConfigurableReq
      */
     public function generate($name, $parameters = [], $referenceType = UrlGeneratorInterface::ABSOLUTE_PATH)
     {
-        if ($name == 'contentlink') {
-            $service         = $this->app['hierarchicalroutes.service'];
+        $config = $this->app['hierarchicalroutes.config'];
+        $enableRouting = $config->get('settings/enable-routing', true);
+
+        if ($enableRouting && $name == 'contentlink') {
+            $service = $this->app['hierarchicalroutes.service'];
 
             /**
              * Since Bolt 3.3. Bolt now strips away all the parameters that are not needed for the
