@@ -34,13 +34,33 @@ class HierarchicalRoutesController implements ControllerProviderInterface
 
         $requirement = $app['hierarchicalroutes.controller.requirement'];
 
-        $ctr
-            ->match("/{slug}", [$this, 'recordExactMatch'])
-            ->assert('slug', $requirement->anyRecordRouteConstraint())
-            ->before('controller.frontend:before')
-            ->after('controller.frontend:after')
-            ->bind('hierarchicalroutes.record.exact')
-        ;
+        // A site with many pages or deeply nested pages (usually a combination of both)
+        // results in an error. In this case split into multiple routes. The limit is set
+        // around 32767 and requires a re-compile of PHP in order to change this limit.
+        // Downside of this method is to that URL generation also becomes more complicated.
+        $anyRecordRouteConstraint = $requirement->anyRecordRouteConstraint();
+        if (strlen($anyRecordRouteConstraint) > 30000) {
+            $index  = 0;
+            $groups = $requirement->anyRecordRouteConstraintSplitted();
+            foreach ($groups as $group) {
+                $ctr
+                    ->match("/{slug}", [$this, 'recordExactMatch'])
+                    ->assert('slug', $group)
+                    ->before('controller.frontend:before')
+                    ->after('controller.frontend:after')
+                    ->bind('hierarchicalroutes.record.exact_' . $index)
+                ;
+                $index++;
+            }
+        } else {
+            $ctr
+                ->match("/{slug}", [$this, 'recordExactMatch'])
+                ->assert('slug', $anyRecordRouteConstraint)
+                ->before('controller.frontend:before')
+                ->after('controller.frontend:after')
+                ->bind('hierarchicalroutes.record.exact')
+            ;
+        }
 
         $ctr
             ->match("/{slug}", [$this, 'listingExactMatch'])

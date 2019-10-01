@@ -40,6 +40,7 @@ class HierarchicalUrlGenerator implements UrlGeneratorInterface, ConfigurableReq
     {
         $config = $this->app['hierarchicalroutes.config'];
         $enableRouting = $config->get('settings/enable-routing', true);
+        $bypassUrlGenerator = $config->get('settings/bypass-url-generator', false);
 
         if ($enableRouting && $name == 'contentlink') {
             $service = $this->app['hierarchicalroutes.service'];
@@ -55,10 +56,29 @@ class HierarchicalUrlGenerator implements UrlGeneratorInterface, ConfigurableReq
             $recordRoutes    = $service->getRecordRoutes();
 
             if (isset($recordRoutes["$contenttypeslug/$slug"])) {
+                if ($bypassUrlGenerator) {
+                    return '/' . $recordRoutes["$contenttypeslug/$slug"];
+                }
+
                 $name = 'hierarchicalroutes.record.exact';
                 $parameters = [
                     'slug' => $recordRoutes["$contenttypeslug/$slug"],
                 ];
+
+                $requirement = $this->app['hierarchicalroutes.controller.requirement'];
+                $anyRecordRouteConstraint = $requirement->anyRecordRouteConstraint();
+                if (strlen($anyRecordRouteConstraint) > 30000) {
+                    $groups = $requirement->anyRecordRouteConstraintSplitted();
+                    $index  = 0;
+                    foreach ($groups as $group) {
+                        $matches = preg_match("($group)", $parameters['slug']);
+                        if ($matches === 1) {
+                            return $this->wrapped->generate($name . '_' . $index, $parameters, $referenceType);
+                        }
+                        $index++;
+                    }
+                }
+
                 return $this->wrapped->generate($name, $parameters, $referenceType);
             }
 

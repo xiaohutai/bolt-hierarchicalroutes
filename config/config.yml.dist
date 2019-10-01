@@ -49,9 +49,10 @@ rules:
 #                 When using Bolt Translate, the Bolt Translate routing should
 #                 take over, so set this to `false`. Bolt Translate integration
 #                 is not working.
-#
+# bypass-url-generator: Bypasses the URL generator. This is generally kept `false`.
 
 settings:
     overwrite-duplicates : true
     override-slugs       : false
     enable-routing       : true
+    bypass-url-generator : false
