@@ -16,6 +16,8 @@ class Requirement
     private $listingRoutes    = [];
     private $potentialParents = [];
 
+    private $chunkSize = 100;
+
     /**
      * @param HierarchicalRoutesService $service
      */
@@ -28,6 +30,21 @@ class Requirement
         $this->recordRoutes     = $this->service->getRecordRoutes();
         $this->listingRoutes    = $this->service->getListingRoutes();
         $this->potentialParents = $this->service->getPotentialParents();
+    }
+
+    /**
+     * @return array
+     */
+    public function anyRecordRouteConstraintSplitted()
+    {
+        $result = [];
+        $chunks = array_chunk($this->recordRoutes, $this->chunkSize);
+
+        foreach ($chunks as $chunk) {
+            $result[] = $this->createConstraints($chunk);
+        }
+
+        return $result;
     }
 
     /**
