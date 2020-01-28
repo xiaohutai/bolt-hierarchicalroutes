@@ -56,3 +56,9 @@ settings:
     override-slugs       : false
     enable-routing       : true
     bypass-url-generator : false
+
+# Permission
+# ----------
+# Set a custom extension here.
+
+permission: extensions

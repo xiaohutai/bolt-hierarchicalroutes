@@ -29,8 +29,8 @@ use Symfony\Component\Security\Core\Exception\AccessDeniedException;
  */
 class HierarchicalRoutesExtension extends SimpleExtension
 {
-    /** @var string $permission The permission a user needs for interaction with the back-end */
-    private $permission = 'extensions';
+    /** @var string $defaultPermission The default permission a user needs for interaction with the back-end */
+    private $defaultPermission = 'extensions';
 
     /**
      * {@inheritdoc}
@@ -74,11 +74,13 @@ class HierarchicalRoutesExtension extends SimpleExtension
      */
     protected function registerMenuEntries()
     {
+        $config = $this->getConfig();
+        $permission = isset($config['permission']) ? $config['permission'] : $this->defaultPermission;
+
         $menuEntry = (new MenuEntry('my-custom-backend-page', 'hierarchical-routes'))
             ->setLabel('Hierarchial Routes')
             ->setIcon('fa:sitemap')
-            ->setPermission($this->permission)
-        ;
+            ->setPermission($permission);
 
         return [$menuEntry];
     }
@@ -103,7 +105,10 @@ class HierarchicalRoutesExtension extends SimpleExtension
     {
         $app = $this->getContainer();
 
-        if (!$app['users']->isAllowed($this->permission)) {
+        $config = $this->getConfig();
+        $permission = isset($config['permission']) ? $config['permission'] : $this->defaultPermission;
+
+        if (!$app['users']->isAllowed($permission)) {
             throw new AccessDeniedException('Logged in user does not have the correct rights to use this route.');
         }
 
@@ -148,7 +153,9 @@ class HierarchicalRoutesExtension extends SimpleExtension
      */
     protected function registerServices(Application $app)
     {
-        $app['hierarchicalroutes.config'] = $app->share(function () { return new Config($this->getConfig()); });
+        $app['hierarchicalroutes.config'] = $app->share(function () {
+            return new Config($this->getConfig());
+        });
     }
 
     /**
