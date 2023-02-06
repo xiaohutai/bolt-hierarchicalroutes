@@ -276,7 +276,7 @@ class HierarchicalRoutesService
         $content = false;
         if (isset($item['path']) && $item['path'] != 'homepage') {
             /** @var \Bolt\Legacy\Content $content */
-            $content = $this->storage->getContent($item['path'], ['hydrate' => false]);
+            $content = $this->storage->getContent($item['path'], ['hydrate' => false, 'status' => '!']);
         }
 
         // Only items with records can be in a hierarchy, otherwise it doesn't make much sense
@@ -361,7 +361,7 @@ class HierarchicalRoutesService
      */
     private function importRule($type, $params)
     {
-        $content = $this->storage->getContent($params['parent'], ['hydrate' => false]);
+        $content = $this->storage->getContent($params['parent'], ['hydrate' => false, 'status' => '!']);
 
         switch ($type) {
             case 'contenttype':
@@ -522,7 +522,7 @@ class HierarchicalRoutesService
     private function hydrateRecord($item)
     {
         if ($item) {
-            return $this->storage->getContent($item);
+            return $this->storage->getContent($item, ['status' => '!']);
         } else {
             return $item; // or null
         }
