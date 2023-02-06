@@ -71,8 +71,10 @@ class HierarchicalUrlGenerator implements UrlGeneratorInterface, ConfigurableReq
                     $groups = $requirement->anyRecordRouteConstraintSplitted();
                     $index  = 0;
                     foreach ($groups as $group) {
-                        $matches = preg_match("($group)", $parameters['slug']);
-                        if ($matches === 1) {
+                        // $matches = preg_match("($group)", $parameters['slug']);
+                        $lines = explode('|', $group);
+                        $matches = in_array($parameters['slug'], $lines);
+                        if ($matches) {
                             return $this->wrapped->generate($name . '_' . $index, $parameters, $referenceType);
                         }
                         $index++;
